@@ -324,3 +324,10 @@ document.addEventListener('DOMContentLoaded', () => {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = ResponsiveHelper;
 }
+
+// Load the dedicated imported-question adapter only on Blockbusters.
+if (/\/activities\/Blockbusters\.html$/i.test(window.location.pathname)) {
+    const adapter = document.createElement('script');
+    adapter.src = '../assets/js/blockbusters-classact.js';
+    document.head.appendChild(adapter);
+}
