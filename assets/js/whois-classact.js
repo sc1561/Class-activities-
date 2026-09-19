@@ -16,6 +16,7 @@
     const startButton = document.getElementById("startGameBtn");
     const nativeGame = document.getElementById("gameArea");
     if (!startButton || !nativeGame) return;
+    let nativeStartDisabled = startButton.disabled;
 
     const controls = startButton.closest(".controls") || startButton.parentElement;
     const loader = document.createElement("section");
@@ -61,9 +62,11 @@
     const importBox = loader.querySelector(".classact-import");
     const status = loader.querySelector(".classact-status");
     loader.querySelectorAll(".classact-mode").forEach((button) => button.addEventListener("click", () => {
+      if (!importedMode) nativeStartDisabled = startButton.disabled;
       importedMode = button.dataset.mode === "imported";
       loader.querySelectorAll(".classact-mode").forEach((item) => item.classList.toggle("active", item === button));
       importBox.classList.toggle("active", importedMode);
+      startButton.disabled = importedMode ? false : nativeStartDisabled;
     }));
 
     loader.querySelector(".classact-file").addEventListener("change", async (event) => {
