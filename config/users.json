@@ -1,0 +1,54 @@
+{
+  "systemAdmins": [
+    {
+      "id": "admin_001",
+      "username": "user",
+      "password": "user0",
+      "fullName": "مدير النظام",
+      "role": "system_admin",
+      "email": "admin@school.om",
+      "permissions": [
+        "system_settings",
+        "user_management",
+        "file_management",
+        "system_diagnostics",
+        "backup_restore"
+      ],
+      "created": "2024-01-01T00:00:00.000Z",
+      "lastLogin": null,
+      "isActive": true,
+      "loginAttempts": 0,
+      "lastLoginAttempt": null
+    },
+    {
+      "id": "admin_002",
+      "username": "ahmed",
+      "password": "Ahmed@2024",
+  "fullName": "مرحبا استاذ أحمد",
+      "role": "super_admin",
+  "email": "",
+      "permissions": [
+        "system_settings",
+        "user_management",
+        "file_management",
+        "system_diagnostics",
+        "backup_restore",
+        "developer_tools"
+      ],
+      "created": "2024-01-01T00:00:00.000Z",
+      "lastLogin": null,
+      "isActive": true,
+      "loginAttempts": 0,
+      "lastLoginAttempt": null
+    }
+  ],
+  "settings": {
+    "maxLoginAttempts": 3,
+    "lockoutDuration": 900000,
+    "sessionTimeout": 3600000,
+    "requirePasswordChange": false,
+    "passwordMinLength": 6
+  }
+}
+
+

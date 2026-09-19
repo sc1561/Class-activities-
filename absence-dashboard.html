@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة إدارة الغياب</title>
+  <style>
+    body {
+      font-family: 'Cairo', Arial, sans-serif;
+      background: linear-gradient(135deg, #e0f7fa 0%, #b2dfdb 100%);
+      margin: 0;
+      padding: 0;
+      color: #222;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 40px auto;
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+      padding: 32px 24px 24px 24px;
+    }
+    h1 {
+      text-align: center;
+      color: #00796B;
+      margin-bottom: 16px;
+      font-size: 2.2rem;
+    }
+    .stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+      justify-content: center;
+      margin-bottom: 24px;
+    }
+    .stat {
+      background: #f0f7f6;
+      border-radius: 12px;
+      padding: 18px 28px;
+      min-width: 160px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,121,107,0.07);
+    }
+    .stat .num {
+      font-size: 2rem;
+      color: #00796B;
+      font-weight: bold;
+    }
+    .stat .label {
+      color: #555;
+      font-size: 1rem;
+    }
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      margin-bottom: 18px;
+    }
+    .filters input, .filters select {
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid #b2dfdb;
+      font-size: 1rem;
+      min-width: 120px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 18px;
+      background: #fff;
+    }
+    th, td {
+      padding: 10px 8px;
+      border-bottom: 1px solid #e0e0e0;
+      text-align: center;
+    }
+    th {
+      background: #00796B;
+      color: #fff;
+      font-weight: 600;
+    }
+    tr:hover {
+      background: #f5f5f5;
+    }
+    .no-data {
+      text-align: center;
+      color: #888;
+      margin: 30px 0;
+      font-size: 1.1rem;
+    }
+    .export-btn {
+      background: #2196F3;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 22px;
+      font-size: 1rem;
+      cursor: pointer;
+      margin: 0 auto 18px auto;
+      display: block;
+      transition: background 0.2s;
+    }
+    .export-btn:hover {
+      background: #1769aa;
+    }
+    .top-icons-bar {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 12px;
+      background: #e0f7fa;
+      padding: 10px 18px 4px 18px;
+      border-radius: 0 0 16px 16px;
+      box-shadow: 0 2px 8px rgba(0,121,107,0.07);
+      margin-bottom: 8px;
+    }
+    .icon-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 6px;
+      border-radius: 50%;
+      transition: background 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .icon-btn:hover {
+      background: #b2dfdb;
+    }
+    .material-icons {
+      font-family: 'Material Icons';
+      font-style: normal;
+      font-weight: normal;
+      font-size: 2rem;
+      line-height: 1;
+      letter-spacing: normal;
+      text-transform: none;
+      display: inline-block;
+      direction: ltr;
+      -webkit-font-feature-settings: 'liga';
+      -webkit-font-smoothing: antialiased;
+      color: #00796B;
+    }
+    @media (max-width: 700px) {
+      .container { padding: 10px 2vw; }
+      .stats { flex-direction: column; align-items: center; }
+      .filters { flex-direction: column; align-items: stretch; }
+      th, td { font-size: 0.95rem; }
+    }
+    /* أضف CSS للصفحات والتظليل */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      margin: 12px 0 0 0;
+    }
+    .pagination button {
+      background: #00796B;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 14px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .pagination button[disabled] {
+      background: #b2dfdb;
+      color: #eee;
+      cursor: not-allowed;
+    }
+    .pagination span {
+      font-size: 1rem;
+      color: #00796B;
+      margin: 0 6px;
+    }
+    mark {
+      background: #ffe082;
+      color: #222;
+      padding: 0 2px;
+      border-radius: 2px;
+    }
+  </style>
+  <!-- Google Material Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <!-- شريط أيقونات علوي -->
+    <div class="top-icons-bar">
+      <a href="index.html" title="الصفحة الرئيسية" class="icon-btn">
+        <span class="material-icons">home</span>
+      </a>
+      <button title="ملء الشاشة" class="icon-btn" id="fullscreenBtn">
+        <span class="material-icons">fullscreen</span>
+      </button>
+    </div>
+    <h1>لوحة إدارة الغياب</h1>
+    <div class="stats" id="stats"></div>
+    <div class="filters">
+      <input type="text" id="searchInput" placeholder="بحث بالاسم أو الصف...">
+      <select id="classFilter"><option value="">كل الصفوف</option></select>
+      <input type="date" id="dateFilter">
+    <button class="export-btn" id="exportBtn">تصدير Excel</button>
+  <button class="icon-btn share-btn" id="shareBtn" title="مشاركة البيانات">
+    <span class="material-icons">share</span>
+  </button>
+  <input type="text" id="studentMonthInput" placeholder="عدد غيابات طالب في هذا الشهر" style="min-width:180px;direction:rtl;">
+  <select id="studentMonthSelect" style="min-width:90px;">
+    <option value="">الشهر الحالي</option>
+    <option value="1">يناير</option>
+    <option value="2">فبراير</option>
+    <option value="3">مارس</option>
+    <option value="4">أبريل</option>
+    <option value="5">مايو</option>
+    <option value="6">يونيو</option>
+    <option value="7">يوليو</option>
+    <option value="8">أغسطس</option>
+    <option value="9">سبتمبر</option>
+    <option value="10">أكتوبر</option>
+    <option value="11">نوفمبر</option>
+    <option value="12">ديسمبر</option>
+  </select>
+  <input type="number" id="studentYearInput" min="2000" max="2100" placeholder="السنة" style="width:70px;direction:ltr;" />
+  <span id="studentMonthResult" style="font-size:1rem;color:#00796B;margin-right:8px;"></span>
+    </div>
+    <div id="tableContainer"></div>
+  </div>
+  <!-- مكتبة SheetJS لتصدير Excel (CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.20.0/dist/xlsx.full.min.js"></script>
+  <script>
+    // حساب عدد غيابات طالب خلال شهر وسنة محددين
+    function countStudentAbsencesByMonth(name, month, year) {
+      if (!name) return 0;
+      return allData.filter(r => {
+        if (!r.name || !r.date) return false;
+        if (r.name.trim() !== name.trim()) return false;
+        const [y, m] = r.date.split('-');
+        if (year && Number(y) !== Number(year)) return false;
+        if (month && Number(m) !== Number(month)) return false;
+        return true;
+      }).length;
+    }
+
+    // حدث عند إدخال اسم الطالب أو تغيير الشهر أو السنة
+    document.addEventListener('DOMContentLoaded', function() {
+      const input = document.getElementById('studentMonthInput');
+      const monthSel = document.getElementById('studentMonthSelect');
+      const yearInput = document.getElementById('studentYearInput');
+      const result = document.getElementById('studentMonthResult');
+      // تعبئة السنة الحالية افتراضياً
+      if (yearInput) yearInput.value = new Date().getFullYear();
+      function updateCount() {
+        const name = input.value.trim();
+        let month = monthSel.value;
+        let year = yearInput.value;
+        if (!month) month = (new Date().getMonth() + 1).toString();
+        if (!year) year = new Date().getFullYear().toString();
+        if (!name) { result.textContent = ''; return; }
+        const count = countStudentAbsencesByMonth(name, month, year);
+        result.textContent = count ? `عدد غيابات هذا الطالب في ${monthSel.options[monthSel.selectedIndex].text} ${year}: ${count}` : `لا يوجد غيابات لهذا الطالب في ${monthSel.options[monthSel.selectedIndex].text} ${year}`;
+      }
+      if (input) input.addEventListener('input', updateCount);
+      if (monthSel) monthSel.addEventListener('change', updateCount);
+      if (yearInput) yearInput.addEventListener('input', updateCount);
+    });
+    // مشاركة بيانات الغياب باستخدام Web Share API أو نسخ للحافظة
+    function shareAbsenceData() {
+      if (!filteredData.length) return alert('لا توجد بيانات للمشاركة');
+      const headers = ['الاسم','الصف','التاريخ','الوقت'];
+      let text = headers.join('\t') + '\n';
+      filteredData.forEach(r => {
+        text += [r.name||'', r.class||'', r.date||'', r.time||''].join('\t') + '\n';
+      });
+      if (navigator.share) {
+        navigator.share({
+          title: 'بيانات الغياب',
+          text: text
+        }).catch(() => {
+          // إذا رفض المستخدم أو لم تنجح المشاركة، انسخ للحافظة
+          fallbackCopy(text);
+        });
+      } else {
+        fallbackCopy(text);
+      }
+    }
+
+    function fallbackCopy(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        alert('تم نسخ بيانات الغياب إلى الحافظة. يمكنك لصقها في أي تطبيق تواصل.');
+      }, () => {
+        alert('تعذر نسخ البيانات.');
+      });
+    }
+    // إعدادات SheetDB API
+    const SHEETDB_URL = 'https://sheetdb.io/api/v1/rnkdh4ly6qmo8';
+    let allData = [];
+    let filteredData = [];
+    let currentPage = 1;
+    const rowsPerPage = 25;
+
+    // جلب البيانات من SheetDB
+    async function fetchAbsenceData() {
+      try {
+        const res = await fetch(SHEETDB_URL);
+        const data = await res.json();
+        allData = Array.isArray(data) ? data : (data.data || []);
+        renderFilters();
+        applyFilters();
+      } catch (e) {
+        document.getElementById('tableContainer').innerHTML = '<div class="no-data">تعذر تحميل البيانات</div>';
+      }
+    }
+
+    // عرض الفلاتر
+    function renderFilters() {
+      const classSet = new Set(allData.map(row => row.class));
+      const classFilter = document.getElementById('classFilter');
+      classFilter.innerHTML = '<option value="">كل الصفوف</option>';
+      Array.from(classSet).sort().forEach(cls => {
+        if(cls) classFilter.innerHTML += `<option value="${cls}">${cls}</option>`;
+      });
+    }
+
+    // تمييز النص المطابق في نتائج البحث
+    function highlightMatch(text, search) {
+      if (!search) return text;
+      const re = new RegExp(`(${search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+      return text.replace(re, '<mark>$1</mark>');
+    }
+
+    // تطبيق الفلاتر
+    function applyFilters() {
+      const search = document.getElementById('searchInput').value.trim().toLowerCase();
+      const classVal = document.getElementById('classFilter').value;
+      const dateVal = document.getElementById('dateFilter').value;
+      filteredData = allData.filter(row => {
+        let match = true;
+        if (search) {
+          match = (row.name && row.name.toLowerCase().includes(search)) || (row.class && row.class.toLowerCase().includes(search));
+        }
+        if (match && classVal) {
+          match = row.class === classVal;
+        }
+        if (match && dateVal) {
+          match = row.date === dateVal;
+        }
+        return match;
+      });
+      currentPage = 1;
+      renderTable();
+      renderStats();
+    }
+
+    // عرض الجدول
+    function renderTable() {
+      const container = document.getElementById('tableContainer');
+      if (!filteredData.length) {
+        container.innerHTML = '<div class="no-data">لا توجد بيانات مطابقة</div>';
+        return;
+      }
+      const search = document.getElementById('searchInput').value.trim();
+      const startIdx = (currentPage - 1) * rowsPerPage;
+      const endIdx = Math.min(startIdx + rowsPerPage, filteredData.length);
+      let html = `<table><thead><tr>
+        <th>الاسم</th><th>الصف</th><th>التاريخ</th><th>الوقت</th>
+      </tr></thead><tbody>`;
+      for (let i = startIdx; i < endIdx; i++) {
+        const row = filteredData[i];
+        html += `<tr><td>${highlightMatch(row.name || '', search)}</td><td>${highlightMatch(row.class || '', search)}</td><td>${row.date || ''}</td><td>${row.time || ''}</td></tr>`;
+      }
+      html += '</tbody></table>';
+      // أزرار التنقل
+      const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+      if (totalPages > 1) {
+        html += '<div class="pagination">';
+        html += `<button ${currentPage === 1 ? 'disabled' : ''} onclick="gotoPage(1)">الأولى</button>`;
+        html += `<button ${currentPage === 1 ? 'disabled' : ''} onclick="gotoPage(${currentPage - 1})">السابق</button>`;
+        html += `<span>صفحة ${currentPage} من ${totalPages}</span>`;
+        html += `<button ${currentPage === totalPages ? 'disabled' : ''} onclick="gotoPage(${currentPage + 1})">التالي</button>`;
+        html += `<button ${currentPage === totalPages ? 'disabled' : ''} onclick="gotoPage(${totalPages})">الأخيرة</button>`;
+        html += '</div>';
+      }
+      container.innerHTML = html;
+    }
+
+    window.gotoPage = function(page) {
+      const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+      if (page < 1 || page > totalPages) return;
+      currentPage = page;
+      renderTable();
+      window.scrollTo({top: 0, behavior: 'smooth'});
+    };
+
+    // عرض الإحصائيات
+    function renderStats() {
+      const statsDiv = document.getElementById('stats');
+      const total = filteredData.length;
+      const uniqueStudents = new Set(filteredData.map(r => r.name)).size;
+      const uniqueClasses = new Set(filteredData.map(r => r.class)).size;
+      // أكثر الطلاب غيابًا
+      let mostAbsent = '';
+      let maxAbs = 0;
+      if (filteredData.length) {
+        const count = {};
+        filteredData.forEach(r => { if(r.name) count[r.name] = (count[r.name]||0)+1; });
+        const sorted = Object.entries(count).sort((a,b)=>b[1]-a[1]);
+        if(sorted[0]) { mostAbsent = sorted[0][0]; maxAbs = sorted[0][1]; }
+      }
+      statsDiv.innerHTML = `
+        <div class="stat"><div class="num">${total}</div><div class="label">عدد سجلات الغياب</div></div>
+        <div class="stat"><div class="num">${uniqueStudents}</div><div class="label">عدد الطلاب</div></div>
+        <div class="stat"><div class="num">${uniqueClasses}</div><div class="label">عدد الصفوف</div></div>
+        <div class="stat"><div class="num">${mostAbsent || '-'}</div><div class="label">أكثر الطلاب غيابًا${maxAbs ? ` (${maxAbs})` : ''}</div></div>
+      `;
+    }
+
+    // تصدير CSV احترافي
+    function exportCSV() {
+      if (!filteredData.length) return;
+      // إعداد العناوين
+      const headers = ['الاسم','الصف','التاريخ','الوقت'];
+      const rows = [headers, ...filteredData.map(r => [r.name||'', r.class||'', r.date||'', r.time||''])];
+      // تحويل إلى CSV مع ترميز UTF-8 BOM
+      const csv = rows.map(row => row.map(cell => '"'+(cell||'').replace(/"/g,'""')+'"').join(',')).join('\r\n');
+      // إضافة BOM ليظهر بالعربي بشكل صحيح في Excel
+      const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'absence_export.csv';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // الأحداث
+    document.getElementById('searchInput').addEventListener('input', applyFilters);
+    document.getElementById('classFilter').addEventListener('change', applyFilters);
+    document.getElementById('dateFilter').addEventListener('change', applyFilters);
+  document.getElementById('exportBtn').addEventListener('click', exportCSV);
+  document.getElementById('shareBtn').addEventListener('click', shareAbsenceData);
+    // ملء الشاشة
+    document.getElementById('fullscreenBtn').addEventListener('click', function() {
+      if (document.fullscreenElement) {
+        document.exitFullscreen();
+      } else {
+        document.documentElement.requestFullscreen();
+      }
+    });
+
+    // بدء التحميل
+    fetchAbsenceData();
+  </script>
+</body>
+</html>
+

@@ -1,0 +1,1978 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <meta name="theme-color" content="#00796B"/>
+  <meta name="description" content="نظام إدارة الطلاب"/>
+  <meta name="keywords" content="إدارة, طلاب, مدرسة, عُمان, تعليم"/>
+  <meta name="author" content=""/>
+
+  <title>نظام إدارة الطلاب</title>
+
+  <!-- الخطوط والأيقونات -->
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <!-- فافيكون -->
+  <link rel="icon" type="image/png" href="assets/media/images/school-logo.png">
+
+  <!-- ===== ملفات التصميم المتجاوب ===== -->
+  <link rel="stylesheet" href="assets/css/responsive.css">
+
+  <style>
+    :root {
+      /* نظام ألوان عُماني متطور */
+      --primary-color: #00796B;
+      --primary-light: #4DB6AC;
+      --primary-dark: #004D40;
+      --secondary-color: #FF5722;
+      --accent-color: #FFD700;
+      --success-color: #4CAF50;
+      --warning-color: #FF9800;
+      --error-color: #F44336;
+      --info-color: #2196F3;
+      --text-primary: #212121;
+      --text-secondary: #757575;
+      --background-light: #FAFAFA;
+      --surface-color: #FFFFFF;
+      --shadow-light: rgba(0, 0, 0, 0.1);
+      --shadow-medium: rgba(0, 0, 0, 0.2);
+      --shadow-dark: rgba(0, 0, 0, 0.3);
+
+      /* متغيرات التخطيط */
+      --border-radius: 16px;
+      --border-radius-small: 8px;
+      --spacing-xs: 4px;
+      --spacing-sm: 8px;
+      --spacing-md: 16px;
+      --spacing-lg: 24px;
+      --spacing-xl: 32px;
+
+      /* الانتقالات */
+      --transition-fast: 0.2s ease-out;
+      --transition-normal: 0.3s ease-out;
+      --transition-slow: 0.5s ease-out;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: linear-gradient(135deg,
+        #e0f7fa 0%,
+        #b2dfdb 25%,
+        #80cbc4 50%,
+        #4db6ac 75%,
+        #26a69a 100%);
+      background-attachment: fixed;
+      color: var(--text-primary);
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* خلفية متحركة */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(255, 215, 0, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(0, 121, 107, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 40% 60%, rgba(255, 87, 34, 0.1) 0%, transparent 50%);
+      animation: backgroundShift 20s ease-in-out infinite;
+      z-index: -1;
+    }
+
+    @keyframes backgroundShift {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      25% { transform: translate(-20px, 20px) rotate(1deg); }
+      50% { transform: translate(20px, -20px) rotate(-1deg); }
+      75% { transform: translate(-10px, -10px) rotate(0.5deg); }
+    }
+
+    /* أزرار التحكم */
+    .control-buttons {
+      position: fixed;
+      top: var(--spacing-md);
+      display: flex;
+      gap: var(--spacing-sm);
+      z-index: 1000;
+    }
+
+    .control-buttons.left {
+      left: var(--spacing-md);
+    }
+
+    .control-buttons.right {
+      right: var(--spacing-md);
+    }
+
+    .control-btn {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(255, 255, 255, 0.9);
+      color: var(--primary-color);
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px var(--shadow-medium);
+      transition: all var(--transition-normal);
+      backdrop-filter: blur(10px);
+    }
+
+    .control-btn:hover {
+      transform: translateY(-3px) scale(1.05);
+      background: var(--primary-color);
+      color: white;
+      box-shadow: 0 8px 20px var(--shadow-dark);
+    }
+
+    .control-btn:active {
+      transform: translateY(0) scale(0.95);
+    }
+
+    /* الحاوي الرئيسي */
+    .main-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: var(--spacing-xl) var(--spacing-lg);
+      position: relative;
+      z-index: 10;
+    }
+
+    /* رأس الصفحة */
+    .header {
+      text-align: center;
+      margin-bottom: var(--spacing-xl);
+      animation: slideDown 0.8s ease-out;
+    }
+
+    .header-card {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: var(--border-radius);
+      padding: var(--spacing-xl);
+      box-shadow: 0 8px 32px var(--shadow-medium);
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .header-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary-color), var(--secondary-color), var(--accent-color));
+    }
+
+    .header-title {
+      font-size: clamp(1.8rem, 4vw, 2.2rem);
+      font-weight: 700;
+      margin-bottom: var(--spacing-sm);
+      color: var(--primary-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--spacing-sm);
+    }
+
+    .header-subtitle {
+      font-size: clamp(1rem, 3vw, 1.1rem);
+      color: var(--text-secondary);
+      font-weight: 400;
+      line-height: 1.5;
+    }
+
+    /* شريط الأدوات */
+    .toolbar {
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: var(--border-radius);
+      padding: var(--spacing-lg);
+      margin-bottom: var(--spacing-xl);
+      box-shadow: 0 4px 20px var(--shadow-light);
+      backdrop-filter: blur(10px);
+      animation: fadeInUp 0.8s ease-out 0.2s both;
+    }
+
+    .toolbar-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--spacing-md);
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .search-container {
+      flex: 1;
+      min-width: 300px;
+      position: relative;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: var(--spacing-md) var(--spacing-lg);
+      border: 2px solid rgba(0, 121, 107, 0.2);
+      border-radius: var(--border-radius-small);
+      font-size: 1rem;
+      background: rgba(255, 255, 255, 0.9);
+      transition: all var(--transition-normal);
+      padding-right: 50px;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(0, 121, 107, 0.1);
+    }
+
+    .search-icon {
+      position: absolute;
+      right: var(--spacing-md);
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-secondary);
+      font-size: 1.2rem;
+    }
+
+    .filters-container {
+      display: flex;
+      gap: var(--spacing-md);
+      flex-wrap: wrap;
+    }
+
+    .filter-select {
+      padding: var(--spacing-sm) var(--spacing-md);
+      border: 2px solid rgba(0, 121, 107, 0.2);
+      border-radius: var(--border-radius-small);
+      background: rgba(255, 255, 255, 0.9);
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all var(--transition-normal);
+    }
+
+    .filter-select:focus {
+      outline: none;
+      border-color: var(--primary-color);
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: var(--spacing-sm);
+    }
+
+    .btn {
+      padding: var(--spacing-sm) var(--spacing-md);
+      border: none;
+      border-radius: var(--border-radius-small);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition-normal);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-xs);
+    }
+
+    .btn-primary {
+      background: var(--primary-color);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      background: var(--secondary-color);
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background: #E64A19;
+      transform: translateY(-2px);
+    }
+
+    .btn-info {
+      background: var(--info-color);
+      color: white;
+    }
+
+    .btn-info:hover {
+      background: #1976D2;
+      transform: translateY(-2px);
+    }
+
+    /* إحصائيات */
+    .stats-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: var(--spacing-lg);
+      margin-bottom: var(--spacing-xl);
+      animation: fadeInUp 0.8s ease-out 0.4s both;
+    }
+
+    .stat-card {
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: var(--border-radius);
+      padding: var(--spacing-lg);
+      text-align: center;
+      box-shadow: 0 4px 20px var(--shadow-light);
+      backdrop-filter: blur(10px);
+      position: relative;
+      overflow: hidden;
+      transition: all var(--transition-normal);
+    }
+
+    .stat-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 30px var(--shadow-medium);
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+    }
+
+    .stat-card.total::before { background: var(--primary-color); }
+    .stat-card.grades::before { background: var(--info-color); }
+    .stat-card.classes::before { background: var(--secondary-color); }
+    .stat-card.selected::before { background: var(--accent-color); }
+
+    .stat-number {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: var(--spacing-xs);
+      display: block;
+    }
+
+    .stat-card.total .stat-number { color: var(--primary-color); }
+    .stat-card.grades .stat-number { color: var(--info-color); }
+    .stat-card.classes .stat-number { color: var(--secondary-color); }
+    .stat-card.selected .stat-number { color: var(--accent-color); }
+
+    .stat-label {
+      font-size: 1rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    /* قائمة الطلاب */
+    .students-container {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: var(--border-radius);
+      box-shadow: 0 8px 32px var(--shadow-medium);
+      backdrop-filter: blur(15px);
+      overflow: hidden;
+      animation: fadeInUp 0.8s ease-out 0.6s both;
+    }
+
+    .students-header {
+      background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+      color: white;
+      padding: var(--spacing-lg);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .students-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    }
+
+    .students-count {
+      background: rgba(255, 255, 255, 0.2);
+      padding: var(--spacing-xs) var(--spacing-sm);
+      border-radius: var(--border-radius-small);
+      font-size: 0.9rem;
+    }
+
+    .students-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1px;
+      background: #f0f0f0;
+    }
+
+    .student-card {
+      background: white;
+      padding: var(--spacing-md);
+      transition: all var(--transition-normal);
+      cursor: pointer;
+      position: relative;
+      border-radius: 4px;
+    }
+
+    .student-card:hover {
+      background: rgba(0, 121, 107, 0.05);
+      transform: translateX(5px);
+    }
+
+    .student-card.selected {
+      background: rgba(0, 121, 107, 0.1);
+      border-right: 4px solid var(--primary-color);
+    }
+
+    .student-name {
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: var(--spacing-xs);
+      line-height: 1.3;
+    }
+
+    .student-class {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-xs);
+    }
+
+    .student-checkbox {
+      position: absolute;
+      top: var(--spacing-sm);
+      left: var(--spacing-sm);
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+
+    /* رسائل فارغة */
+    .empty-state {
+      text-align: center;
+      padding: var(--spacing-xl);
+      color: var(--text-secondary);
+    }
+
+    .empty-icon {
+      font-size: 4rem;
+      margin-bottom: var(--spacing-md);
+      opacity: 0.5;
+    }
+
+    .empty-message {
+      font-size: 1.1rem;
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .empty-submessage {
+      font-size: 0.9rem;
+      opacity: 0.7;
+    }
+
+    /* تأثيرات الحركة */
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* التجاوب مع الشاشات الصغيرة */
+    @media (max-width: 768px) {
+      .main-container {
+        padding: var(--spacing-lg) var(--spacing-md);
+      }
+
+      .toolbar-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .search-container {
+        min-width: unset;
+      }
+
+      .filters-container {
+        justify-content: center;
+      }
+
+      .action-buttons {
+        justify-content: center;
+      }
+
+      .stats-container {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .students-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .students-header {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+      }
+    }
+
+    @media (max-width: 480px) {
+      .stats-container {
+        grid-template-columns: 1fr;
+      }
+
+      .control-btn {
+        width: 45px;
+        height: 45px;
+        font-size: 18px;
+      }
+    }
+
+    /* تأثيرات التركيز للوصولية */
+    .btn:focus,
+    .search-input:focus,
+    .filter-select:focus,
+    .student-card:focus {
+      outline: 3px solid rgba(0, 121, 107, 0.3);
+      outline-offset: 2px;
+    }
+
+    /* تحسينات إضافية */
+    .fade-in {
+      animation: fadeInUp 0.5s ease-out;
+    }
+
+    .pulse {
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.7; }
+      100% { opacity: 1; }
+    }
+
+    /* ===== تحسينات التصميم المتجاوب المخصصة ===== */
+    
+    /* تحسينات عامة للتجاوب */
+    .main-container {
+      max-width: 100vw !important;
+      overflow-x: hidden;
+    }
+
+    .students-grid,
+    .stats-grid {
+      margin: 0 auto;
+      max-width: 100%;
+    }
+
+    /* للأجهزة اللوحية والهواتف الكبيرة */
+    @media (max-width: 768px) {
+      .control-buttons {
+        top: 10px;
+        gap: 6px;
+      }
+
+      .control-buttons.left {
+        left: 10px;
+      }
+
+      .control-buttons.right {
+        right: 10px;
+      }
+
+      .control-btn {
+        width: 45px;
+        height: 45px;
+        font-size: 18px;
+      }
+
+      .main-container {
+        padding: 20px 15px;
+        max-width: 100% !important;
+      }
+
+      /* رأس الصفحة */
+      .page-header {
+        padding: 20px 15px;
+        margin-bottom: 20px;
+      }
+
+      .page-title {
+        font-size: clamp(1.8rem, 4.5vw, 2.2rem);
+        margin-bottom: 8px;
+      }
+
+      .page-subtitle {
+        font-size: clamp(0.9rem, 2.5vw, 1rem);
+      }
+
+      /* شبكة الإحصائيات */
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin-bottom: 20px;
+      }
+
+      .stat-card {
+        padding: 15px 12px;
+      }
+
+      .stat-number {
+        font-size: 1.8rem;
+      }
+
+      .stat-label {
+        font-size: 0.8rem;
+      }
+
+      /* أدوات البحث والفلترة */
+      .search-controls {
+        flex-direction: column;
+        gap: 12px;
+        padding: 15px;
+      }
+
+      .search-box,
+      .filter-controls {
+        width: 100%;
+      }
+
+      .filter-controls {
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .filter-select,
+      .search-input {
+        width: 100%;
+        padding: 10px;
+        font-size: 16px; /* منع التكبير في iOS */
+      }
+
+      /* شبكة الطلاب */
+      .students-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .student-card {
+        padding: 16px 12px;
+        margin: 0 4px;
+      }
+
+      .student-avatar {
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+      }
+
+      .student-info h3 {
+        font-size: 1.1rem;
+        margin-bottom: 4px;
+      }
+
+      .student-details {
+        font-size: 0.8rem;
+        gap: 8px;
+      }
+
+      .student-actions {
+        flex-direction: column;
+        gap: 6px;
+        width: 100%;
+      }
+
+      .action-btn {
+        width: 100%;
+        padding: 8px 12px;
+        font-size: 0.8rem;
+      }
+
+      /* النوافذ المنبثقة */
+      .modal-content {
+        margin: 5% auto;
+        width: 95%;
+        max-width: 500px;
+        padding: 20px 15px;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .form-group input,
+      .form-group select {
+        padding: 10px;
+        font-size: 16px; /* منع التكبير في iOS */
+      }
+    }
+
+    /* للهواتف المحمولة */
+    @media (max-width: 480px) {
+      .control-buttons {
+        top: 8px;
+        gap: 4px;
+      }
+
+      .control-buttons.left {
+        left: 8px;
+      }
+
+      .control-buttons.right {
+        right: 8px;
+      }
+
+      .control-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+      }
+
+      .main-container {
+        padding: 15px 8px;
+      }
+
+      .page-header {
+        padding: 15px 10px;
+        margin-bottom: 15px;
+        text-align: center;
+      }
+
+      .page-title {
+        font-size: clamp(1.5rem, 4vw, 1.8rem);
+        margin-bottom: 6px;
+      }
+
+      .page-subtitle {
+        font-size: clamp(0.85rem, 2.2vw, 0.95rem);
+      }
+
+      /* الإحصائيات */
+      .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        margin-bottom: 15px;
+      }
+
+      .stat-card {
+        padding: 12px 10px;
+        text-align: center;
+      }
+
+      .stat-number {
+        font-size: 1.5rem;
+        margin-bottom: 4px;
+      }
+
+      .stat-label {
+        font-size: 0.75rem;
+      }
+
+      /* أدوات البحث */
+      .search-controls {
+        padding: 12px 8px;
+        gap: 10px;
+      }
+
+      .search-input {
+        padding: 8px 12px;
+        font-size: 16px;
+      }
+
+      .filter-select {
+        padding: 8px 10px;
+        font-size: 14px;
+      }
+
+      /* بطاقات الطلاب */
+      .students-grid {
+        gap: 8px;
+      }
+
+      .student-card {
+        padding: 12px 8px;
+        margin: 0 2px;
+        border-radius: 10px;
+      }
+
+      .student-avatar {
+        width: 45px;
+        height: 45px;
+        font-size: 1.1rem;
+      }
+
+      .student-info {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .student-info h3 {
+        font-size: 1rem;
+        margin-bottom: 3px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .student-details {
+        font-size: 0.75rem;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+
+      .student-actions {
+        flex-direction: column;
+        gap: 4px;
+        width: 80px;
+      }
+
+      .action-btn {
+        width: 100%;
+        padding: 6px 8px;
+        font-size: 0.7rem;
+        border-radius: 4px;
+      }
+
+      /* النوافذ المنبثقة */
+      .modal-content {
+        margin: 2% auto;
+        width: 98%;
+        max-width: 380px;
+        padding: 15px 10px;
+        border-radius: 10px;
+      }
+
+      .modal-header h2 {
+        font-size: 1.2rem;
+        margin-bottom: 10px;
+      }
+
+      .form-group {
+        margin-bottom: 12px;
+      }
+
+      .form-group label {
+        font-size: 0.9rem;
+        margin-bottom: 4px;
+      }
+
+      .form-group input,
+      .form-group select {
+        padding: 8px 10px;
+        font-size: 16px;
+        border-radius: 6px;
+      }
+
+      .modal-actions {
+        gap: 8px;
+        flex-direction: column;
+      }
+
+      .btn {
+        width: 100%;
+        padding: 10px;
+        font-size: 0.9rem;
+      }
+    }
+
+    /* للهواتف الصغيرة جداً */
+    @media (max-width: 360px) {
+      .main-container {
+        padding: 12px 6px;
+      }
+
+      .page-header {
+        padding: 12px 8px;
+        margin-bottom: 12px;
+      }
+
+      .page-title {
+        font-size: clamp(1.3rem, 3.5vw, 1.6rem);
+        margin-bottom: 4px;
+      }
+
+      .page-subtitle {
+        font-size: clamp(0.8rem, 2vw, 0.9rem);
+      }
+
+      .stats-grid {
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      .stat-card {
+        padding: 10px 8px;
+      }
+
+      .stat-number {
+        font-size: 1.3rem;
+      }
+
+      .stat-label {
+        font-size: 0.7rem;
+      }
+
+      .search-controls {
+        padding: 10px 6px;
+        gap: 8px;
+      }
+
+      .students-grid {
+        gap: 6px;
+      }
+
+      .student-card {
+        padding: 10px 6px;
+        margin: 0 1px;
+      }
+
+      .student-avatar {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+      }
+
+      .student-info h3 {
+        font-size: 0.9rem;
+      }
+
+      .student-details {
+        font-size: 0.7rem;
+      }
+
+      .student-actions {
+        width: 70px;
+      }
+
+      .action-btn {
+        padding: 4px 6px;
+        font-size: 0.65rem;
+      }
+
+      .modal-content {
+        width: 99%;
+        max-width: 320px;
+        padding: 12px 8px;
+      }
+    }
+
+    /* للوضع الأفقي على الهواتف */
+    @media (max-height: 500px) and (orientation: landscape) {
+      .main-container {
+        padding: 10px 15px;
+      }
+
+      .page-header {
+        padding: 10px 15px;
+        margin-bottom: 8px;
+      }
+
+      .page-title {
+        font-size: clamp(1.2rem, 3vw, 1.5rem);
+        margin-bottom: 4px;
+      }
+
+      .page-subtitle {
+        font-size: clamp(0.8rem, 2vw, 0.9rem);
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+
+      .stat-card {
+        padding: 8px 6px;
+      }
+
+      .stat-number {
+        font-size: 1.2rem;
+        margin-bottom: 2px;
+      }
+
+      .stat-label {
+        font-size: 0.65rem;
+      }
+
+      .search-controls {
+        padding: 8px 12px;
+        flex-direction: row;
+        gap: 10px;
+      }
+
+      .students-grid {
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 8px;
+      }
+
+      .student-card {
+        padding: 8px 10px;
+      }
+
+      .student-avatar {
+        width: 35px;
+        height: 35px;
+        font-size: 0.9rem;
+      }
+
+      .student-info h3 {
+        font-size: 0.9rem;
+        margin-bottom: 2px;
+      }
+
+      .student-details {
+        font-size: 0.7rem;
+      }
+
+      .student-actions {
+        flex-direction: row;
+        gap: 4px;
+        width: auto;
+      }
+
+      .action-btn {
+        padding: 4px 8px;
+        font-size: 0.7rem;
+      }
+
+      .modal-content {
+        margin: 2% auto;
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+    }
+
+    /* تحسينات إضافية للمس */
+    @media (hover: none) and (pointer: coarse) {
+      .control-btn,
+      .action-btn,
+      .btn,
+      .student-card {
+        min-height: 44px;
+        min-width: 44px;
+      }
+
+      .control-btn:hover,
+      .action-btn:hover,
+      .btn:hover,
+      .student-card:hover {
+        transform: none;
+      }
+
+      .control-btn:active,
+      .action-btn:active,
+      .btn:active {
+        transform: scale(0.95);
+        transition: transform 0.1s ease;
+      }
+
+      .student-card:active {
+        transform: scale(0.98);
+        transition: transform 0.1s ease;
+      }
+
+      /* تحسين النصوص للمس */
+      .search-input,
+      .filter-select,
+      .form-group input,
+      .form-group select {
+        font-size: 16px !important; /* منع التكبير في iOS */
+      }
+    }
+
+    /* تحسينات للشاشات الكبيرة */
+    @media (min-width: 1200px) {
+      .stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+        max-width: 1000px;
+        margin: 0 auto;
+      }
+
+      .students-grid {
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+
+      .student-card {
+        padding: 24px 20px;
+      }
+
+      .student-avatar {
+        width: 60px;
+        height: 60px;
+        font-size: 1.4rem;
+      }
+
+      .student-info h3 {
+        font-size: 1.3rem;
+        margin-bottom: 8px;
+      }
+
+      .student-details {
+        font-size: 0.95rem;
+        gap: 12px;
+      }
+
+      .action-btn {
+        padding: 10px 16px;
+        font-size: 0.9rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- أزرار التحكم -->
+  <div class="control-buttons right">
+    <button class="control-btn" id="homeBtn" title="العودة للصفحة الرئيسية" aria-label="العودة للصفحة الرئيسية">
+      🏠
+    </button>
+    <button class="control-btn" id="activitiesBtn" title="الأنشطة" aria-label="الأنشطة">
+      📚
+    </button>
+  </div>
+
+  <div class="control-buttons left">
+    <button class="control-btn" id="fullscreenBtn" title="ملء الشاشة" aria-label="ملء الشاشة">
+      ⛶
+    </button>
+  </div>
+
+  <!-- المحتوى الرئيسي -->
+  <div class="main-container container-responsive">
+    <!-- رأس الصفحة -->
+    <header class="header">
+      <div class="header-card card-responsive">
+        <h1 class="header-title title-responsive">
+          <span>👥</span>
+          <span>نظام إدارة الطلاب</span>
+        </h1>
+        <p class="header-subtitle text-responsive">
+          إدارة شاملة لبيانات الطلاب مع إمكانيات البحث والتصفية المتقدمة
+        </p>
+      </div>
+    </header>
+
+    <!-- شريط الأدوات -->
+    <div class="toolbar">
+      <div class="toolbar-row">
+        <div class="search-container">
+          <input type="text" class="search-input input-responsive" id="searchInput" placeholder="ابحث عن طالب بالاسم..." autocomplete="off">
+          <span class="search-icon">🔍</span>
+        </div>
+        
+        <div class="filters-container">
+          <select class="filter-select input-responsive" id="gradeFilter">
+            <option value="">جميع الصفوف</option>
+            <option value="خامس">الصف الخامس</option>
+            <option value="سادس">الصف السادس</option>
+            <option value="سابع">الصف السابع</option>
+            <option value="ثامن">الصف الثامن</option>
+            <option value="تاسع">الصف التاسع</option>
+          </select>
+          
+          <select class="filter-select" id="classFilter">
+            <option value="">جميع الشُعب</option>
+          </select>
+        </div>
+        
+        <div class="action-buttons">
+          <button class="btn btn-primary btn-responsive" id="selectAllBtn">
+            <span>✓</span>
+            <span class="hide-mobile">تحديد الكل</span>
+          </button>
+          <button class="btn btn-secondary btn-responsive" id="clearSelectionBtn">
+            <span>✗</span>
+            <span class="hide-mobile">إلغاء التحديد</span>
+          </button>
+          <button class="btn btn-info btn-responsive" id="exportBtn">
+            <span>💾</span>
+            <span class="hide-mobile">تصدير</span>
+          </button>
+          <button class="btn btn-warning btn-responsive" id="absentBtn">
+            <span>🚫</span>
+            <span class="hide-mobile">تسجيل الغياب</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- إحصائيات -->
+    <div class="stats-container">
+      <div class="stat-card card-responsive total">
+        <span class="stat-number heading-responsive" id="totalStudents">0</span>
+        <span class="stat-label text-responsive">إجمالي الطلاب</span>
+      </div>
+      <div class="stat-card card-responsive grades">
+        <span class="stat-number heading-responsive" id="totalGrades">5</span>
+        <span class="stat-label text-responsive">الصفوف الدراسية</span>
+      </div>
+      <div class="stat-card card-responsive classes">
+        <span class="stat-number heading-responsive" id="totalClasses">0</span>
+        <span class="stat-label text-responsive">الشُعب</span>
+      </div>
+      <div class="stat-card card-responsive selected">
+        <span class="stat-number heading-responsive" id="selectedCount">0</span>
+        <span class="stat-label text-responsive">المحددون</span>
+      </div>
+    </div>
+
+    <!-- قائمة الطلاب -->
+    <div class="students-container">
+      <div class="students-header">
+        <div class="students-title heading-responsive">
+          <span>👨‍🎓</span>
+          <span>قائمة الطلاب</span>
+        </div>
+        <div class="students-count text-responsive" id="studentsCount">
+          عرض 0 من 0 طالب
+        </div>
+      </div>
+      
+      <div class="students-grid grid-responsive" id="studentsGrid">
+        <!-- سيتم ملء الطلاب هنا ديناميكياً -->
+      </div>
+      
+      <div class="empty-state" id="emptyState" style="display: none;">
+        <div class="empty-icon">🔍</div>
+        <div class="empty-message heading-responsive">لا توجد نتائج</div>
+        <div class="empty-submessage text-responsive">جرب تغيير معايير البحث أو التصفية</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- الأصوات -->
+  <audio id="clickSound" src="assets/media/sounds/Click.mp3" preload="auto" aria-hidden="true"></audio>
+  <audio id="selectSound" src="assets/media/sounds/select.mp3" preload="auto" aria-hidden="true"></audio>
+
+
+
+  <script>
+    console.log('🚀 بدء تحميل نظام إدارة الطلاب...');
+
+    // المتغيرات العامة
+    let studentsData = {};
+    let filteredStudents = [];
+    let selectedStudents = new Set();
+    let currentFilters = {
+      search: '',
+      grade: '',
+      class: ''
+    };
+    // تحقق من حالة المدير من localStorage
+    let isAdmin = false;
+    if (localStorage.getItem('isAdmin') === 'true') {
+      isAdmin = true;
+    }
+
+    // عناصر DOM
+    const elements = {
+      searchInput: document.getElementById('searchInput'),
+      gradeFilter: document.getElementById('gradeFilter'),
+      classFilter: document.getElementById('classFilter'),
+      studentsGrid: document.getElementById('studentsGrid'),
+      emptyState: document.getElementById('emptyState'),
+      totalStudents: document.getElementById('totalStudents'),
+      totalClasses: document.getElementById('totalClasses'),
+      selectedCount: document.getElementById('selectedCount'),
+      studentsCount: document.getElementById('studentsCount'),
+      selectAllBtn: document.getElementById('selectAllBtn'),
+      clearSelectionBtn: document.getElementById('clearSelectionBtn'),
+      exportBtn: document.getElementById('exportBtn'),
+      homeBtn: document.getElementById('homeBtn'),
+      activitiesBtn: document.getElementById('activitiesBtn'),
+      fullscreenBtn: document.getElementById('fullscreenBtn'),
+      clickSound: document.getElementById('clickSound'),
+      selectSound: document.getElementById('selectSound'),
+  absentBtn: document.getElementById('absentBtn'),
+  // adminLoginBtn: document.getElementById('adminLoginBtn')
+    };
+
+    // تشغيل الصوت
+    function playSound(soundElement) {
+      try {
+        if (soundElement && soundElement.readyState >= 2) {
+          soundElement.currentTime = 0;
+          const playPromise = soundElement.play();
+          if (playPromise !== undefined) {
+            playPromise.catch(() => {
+              console.log('🔇 تعذر تشغيل الصوت');
+            });
+          }
+        }
+      } catch (error) {
+        console.log('🔇 خطأ في تشغيل الصوت:', error);
+      }
+    }
+
+    // تحميل بيانات الطلاب
+    async function loadStudentsData() {
+      try {
+        console.log('📁 تحميل بيانات الطلاب...');
+        const response = await fetch('data/studentData.json');
+        studentsData = await response.json();
+        
+        console.log('✅ تم تحميل بيانات الطلاب بنجاح');
+        console.log('📊 البيانات المحملة:', Object.keys(studentsData).length, 'صف');
+        
+        initializeApp();
+      } catch (error) {
+        console.error('❌ خطأ في تحميل بيانات الطلاب:', error);
+        showError('فشل في تحميل بيانات الطلاب');
+      }
+    }
+
+    // تهيئة التطبيق
+    function initializeApp() {
+      console.log('⚡ تهيئة نظام إدارة الطلاب...');
+      
+      updateClassFilter();
+      updateStats();
+      filterStudents();
+      setupEventListeners();
+      
+      console.log('🎉 تم تهيئة النظام بنجاح!');
+    }
+
+    // تحديث مرشح الشُعب
+    function updateClassFilter() {
+      const gradeValue = elements.gradeFilter.value;
+      const classFilter = elements.classFilter;
+      
+      // مسح الخيارات الحالية
+      classFilter.innerHTML = '<option value="">جميع الشُعب</option>';
+      
+      if (gradeValue) {
+        // إضافة شُعب الصف المختار
+        Object.keys(studentsData)
+          .filter(className => className.startsWith(gradeValue))
+          .forEach(className => {
+            const option = document.createElement('option');
+            option.value = className;
+            option.textContent = className;
+            classFilter.appendChild(option);
+          });
+      } else {
+        // إضافة جميع الشُعب
+        Object.keys(studentsData).forEach(className => {
+          const option = document.createElement('option');
+          option.value = className;
+          option.textContent = className;
+          classFilter.appendChild(option);
+        });
+      }
+    }
+
+    // تحديث الإحصائيات
+    function updateStats() {
+      const totalStudents = Object.values(studentsData).reduce((sum, students) => sum + students.length, 0);
+      const totalClasses = Object.keys(studentsData).length;
+      
+      animateNumber(elements.totalStudents, 0, totalStudents, 1500);
+      animateNumber(elements.totalClasses, 0, totalClasses, 1200);
+      
+      elements.selectedCount.textContent = selectedStudents.size;
+    }
+
+    // تأثير العد المتحرك
+    function animateNumber(element, start, end, duration) {
+      const startTime = performance.now();
+      
+      function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        const current = Math.floor(start + (end - start) * progress);
+        element.textContent = current;
+        
+        if (progress < 1) {
+          requestAnimationFrame(update);
+        }
+      }
+      
+      requestAnimationFrame(update);
+    }
+
+    // تصفية الطلاب
+    function filterStudents() {
+      filteredStudents = [];
+      
+      Object.entries(studentsData).forEach(([className, students]) => {
+        // تطبيق فلتر الصف
+        if (currentFilters.grade && !className.startsWith(currentFilters.grade)) {
+          return;
+        }
+        
+        // تطبيق فلتر الشُعبة
+        if (currentFilters.class && className !== currentFilters.class) {
+          return;
+        }
+        
+        // تطبيق فلتر البحث
+        const searchTerm = currentFilters.search.toLowerCase().trim();
+        const filteredClassStudents = searchTerm 
+          ? students.filter(student => student.toLowerCase().includes(searchTerm))
+          : students;
+        
+        // إضافة الطلاب المفلترين
+        filteredClassStudents.forEach(student => {
+          filteredStudents.push({
+            name: student,
+            class: className,
+            id: `${className}-${student}`
+          });
+        });
+      });
+      
+      renderStudents();
+      updateDisplayCount();
+    }
+
+    // عرض الطلاب
+    function renderStudents() {
+      const grid = elements.studentsGrid;
+      const emptyState = elements.emptyState;
+      
+      if (filteredStudents.length === 0) {
+        grid.innerHTML = '';
+        emptyState.style.display = 'block';
+        return;
+      }
+      
+      emptyState.style.display = 'none';
+      
+      grid.innerHTML = filteredStudents.map(student => `
+        <div class="student-card ${selectedStudents.has(student.id) ? 'selected' : ''}" 
+             data-id="${student.id}" 
+             tabindex="0" 
+             role="button"
+             aria-label="طالب: ${student.name}">
+          <input type="checkbox" class="student-checkbox" 
+                 ${selectedStudents.has(student.id) ? 'checked' : ''}>
+          <div class="student-name">${student.name}</div>
+          <div class="student-class">
+            <span>🏫</span>
+            <span>${student.class}</span>
+          </div>
+        </div>
+      `).join('');
+      
+      // إضافة مستمعي الأحداث للطلاب
+      grid.querySelectorAll('.student-card').forEach(card => {
+        card.addEventListener('click', handleStudentClick);
+        card.addEventListener('keydown', handleStudentKeydown);
+      });
+      
+      // تأثير التلاشي
+      grid.classList.add('fade-in');
+      setTimeout(() => grid.classList.remove('fade-in'), 500);
+    }
+
+    // معالجة النقر على الطالب
+    function handleStudentClick(event) {
+      const card = event.currentTarget;
+      const studentId = card.dataset.id;
+      const checkbox = card.querySelector('.student-checkbox');
+      
+      // تجنب النقر المزدوج على الـ checkbox
+      if (event.target === checkbox) return;
+      
+      toggleStudentSelection(studentId, card, checkbox);
+      playSound(elements.selectSound);
+    }
+
+    // معالجة لوحة المفاتيح للطالب
+    function handleStudentKeydown(event) {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        handleStudentClick(event);
+      }
+    }
+
+    // تبديل تحديد الطالب
+    function toggleStudentSelection(studentId, card, checkbox) {
+      if (selectedStudents.has(studentId)) {
+        selectedStudents.delete(studentId);
+        card.classList.remove('selected');
+        checkbox.checked = false;
+      } else {
+        selectedStudents.add(studentId);
+        card.classList.add('selected');
+        checkbox.checked = true;
+      }
+      
+      updateSelectedCount();
+    }
+
+    // تحديث عداد المحددين
+    function updateSelectedCount() {
+      elements.selectedCount.textContent = selectedStudents.size;
+      elements.selectedCount.classList.add('pulse');
+      setTimeout(() => elements.selectedCount.classList.remove('pulse'), 1000);
+    }
+
+    // تحديث عداد العرض
+    function updateDisplayCount() {
+      const total = Object.values(studentsData).reduce((sum, students) => sum + students.length, 0);
+      elements.studentsCount.textContent = `عرض ${filteredStudents.length} من ${total} طالب`;
+    }
+
+    // تحديد الكل
+    function selectAll() {
+      filteredStudents.forEach(student => {
+        selectedStudents.add(student.id);
+      });
+      renderStudents();
+      updateSelectedCount();
+      playSound(elements.clickSound);
+    }
+
+    // إلغاء تحديد الكل
+    function clearSelection() {
+      selectedStudents.clear();
+      renderStudents();
+      updateSelectedCount();
+      playSound(elements.clickSound);
+    }
+
+    // تصدير البيانات
+    function exportData() {
+      const selectedData = filteredStudents.filter(student => 
+        selectedStudents.has(student.id)
+      );
+      
+      if (selectedData.length === 0) {
+        alert('⚠️ يرجى تحديد طلاب للتصدير');
+        return;
+      }
+      
+      const csvContent = [
+        ['الاسم', 'الصف'],
+        ...selectedData.map(student => [student.name, student.class])
+      ].map(row => row.join(',')).join('\n');
+      
+      const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      
+      link.setAttribute('href', url);
+      link.setAttribute('download', `students_export_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      playSound(elements.clickSound);
+      console.log('📊 تم تصدير بيانات', selectedData.length, 'طالب');
+    }
+
+    // دالة إرسال الغياب إلى Google Sheets عبر Webhook
+function sendAbsenceToGoogleSheets() {
+  const absentStudents = Array.from(selectedStudents).map(id => {
+    const [className, ...nameParts] = id.split('-');
+    return {
+      name: nameParts.join('-'),
+      class: className,
+      date: new Date().toISOString().split('T')[0]
+    };
+  });
+  if (absentStudents.length === 0) {
+    alert('يرجى تحديد الطلاب الغائبين أولاً');
+    return;
+  }
+  // رابط SheetDB API
+  const sheetdbUrl = 'https://sheetdb.io/api/v1/rnkdh4ly6qmo8';
+  fetch(sheetdbUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ data: absentStudents })
+  })
+  .then(response => response.json())
+  .then(data => {
+    showUpdateMessage('تم إرسال الغياب بنجاح إلى Google Sheets عبر SheetDB');
+    clearSelection();
+  })
+  .catch(error => {
+    showError('فشل في إرسال الغياب: ' + error);
+  });
+}
+
+
+
+
+    // إعداد مستمعي الأحداث
+    function setupEventListeners() {
+      // البحث
+      elements.searchInput.addEventListener('input', (e) => {
+        currentFilters.search = e.target.value;
+        filterStudents();
+      });
+      
+      // فلتر الصف
+      elements.gradeFilter.addEventListener('change', (e) => {
+        currentFilters.grade = e.target.value;
+        currentFilters.class = ''; // إعادة تعيين فلتر الشُعبة
+        elements.classFilter.value = '';
+        updateClassFilter();
+        filterStudents();
+      });
+      
+      // فلتر الشُعبة
+      elements.classFilter.addEventListener('change', (e) => {
+        currentFilters.class = e.target.value;
+        filterStudents();
+      });
+      
+      // أزرار الأعمال
+      elements.selectAllBtn.addEventListener('click', selectAll);
+      elements.clearSelectionBtn.addEventListener('click', clearSelection);
+      elements.exportBtn.addEventListener('click', exportData);
+
+
+      // زر الغياب: يطلب الرقم السري عند كل ضغطة
+      elements.absentBtn.addEventListener('click', function() {
+        const pass = prompt('الرجاء إدخال الرقم السري لتسجيل الغياب:');
+        if (pass === null) return; // إلغاء
+        if (pass === 'user0') {
+          sendAbsenceToGoogleSheets();
+        } else {
+          showError('الرقم السري غير صحيح!');
+        }
+      });
+
+  // تم حذف زر دخول المدير
+      
+      // أزرار التنقل
+      elements.homeBtn.addEventListener('click', () => {
+        playSound(elements.clickSound);
+        window.location.href = 'index.html';
+      });
+      
+      elements.activitiesBtn.addEventListener('click', () => {
+        playSound(elements.clickSound);
+        window.location.href = 'main.html';
+      });
+      
+      elements.fullscreenBtn.addEventListener('click', () => {
+        playSound(elements.clickSound);
+        toggleFullScreen();
+      });
+      
+      // اختصارات لوحة المفاتيح
+      document.addEventListener('keydown', (e) => {
+        if (e.ctrlKey && e.key === 'a') {
+          e.preventDefault();
+          selectAll();
+        } else if (e.key === 'Escape') {
+          clearSelection();
+        } else if (e.key === 'F11') {
+          e.preventDefault();
+          toggleFullScreen();
+        }
+      });
+  // لا حاجة لتعطيل زر الغياب
+    }
+
+    // ملء الشاشة
+    async function toggleFullScreen() {
+      try {
+        if (!document.fullscreenElement) {
+          await document.documentElement.requestFullscreen();
+        } else {
+          await document.exitFullscreen();
+        }
+      } catch (error) {
+        console.warn('⚠️ فشل في تغيير وضع ملء الشاشة:', error);
+      }
+    }
+
+    // عرض خطأ
+    function showError(message) {
+      const errorDiv = document.createElement('div');
+      errorDiv.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: var(--error-color);
+        color: white;
+        padding: var(--spacing-lg);
+        border-radius: var(--border-radius);
+        z-index: 2000;
+        box-shadow: 0 8px 32px var(--shadow-dark);
+      `;
+      errorDiv.textContent = `❌ ${message}`;
+      
+      document.body.appendChild(errorDiv);
+      setTimeout(() => {
+        document.body.removeChild(errorDiv);
+      }, 3000);
+    }
+
+    function showUpdateMessage(message) {
+  const msgDiv = document.createElement('div');
+  msgDiv.style.cssText = `
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--info-color);
+    color: white;
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius);
+    z-index: 3000;
+    box-shadow: 0 8px 32px var(--shadow-dark);
+    font-size: 1.2rem;
+    text-align: center;
+  `;
+  msgDiv.textContent = message || 'تم تحديث بيانات الطلاب بنجاح! يرجى إرسال الملف للمطور لحفظ التغييرات.';
+  document.body.appendChild(msgDiv);
+  setTimeout(() => {
+    document.body.removeChild(msgDiv);
+  }, 5000);
+}
+
+    // بدء التطبيق
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('📄 تم تحميل DOM - بدء التهيئة...');
+      loadStudentsData();
+    });
+
+    // معالجة الأخطاء
+    window.addEventListener('error', (e) => {
+      console.error('💥 خطأ عام:', e.error);
+    });
+
+    window.addEventListener('unhandledrejection', (e) => {
+      console.error('💥 خطأ غير معالج:', e.reason);
+    });
+
+    console.log('📝 تم تحميل نصوص نظام إدارة الطلاب!');
+  </script>
+
+  <!-- ===== JavaScript للتصميم المتجاوب ===== -->
+  <script src="assets/js/responsive-helper.js"></script>
+  <script>
+    // تهيئة التصميم المتجاوب
+    document.addEventListener('DOMContentLoaded', function() {
+      if (window.responsiveHelper) {
+        console.log('🎯 تم تفعيل نظام التصميم المتجاوب في student-management.html');
+        
+        // استمع لتغييرات الجهاز
+        window.addEventListener('devicechange', (e) => {
+          console.log('📱 تم تغيير نوع الجهاز إلى:', e.detail.device);
+          
+          // إضافة فئات CSS حسب نوع الجهاز
+          document.body.classList.remove('mobile-device', 'tablet-device', 'desktop-device');
+          document.body.classList.add(e.detail.device + '-device');
+          
+          // تحسين شبكة الطلاب حسب الجهاز
+          const studentsGrid = document.querySelector('.students-grid');
+          const statsContainer = document.querySelector('.stats-container');
+          
+          if (studentsGrid) {
+            if (e.detail.device === 'mobile') {
+              studentsGrid.style.gridTemplateColumns = '1fr';
+            } else if (e.detail.device === 'tablet') {
+              studentsGrid.style.gridTemplateColumns = 'repeat(2, 1fr)';
+            }
+          }
+          
+          if (statsContainer) {
+            if (e.detail.device === 'mobile') {
+              statsContainer.style.gridTemplateColumns = '1fr';
+            } else if (e.detail.device === 'tablet') {
+              statsContainer.style.gridTemplateColumns = 'repeat(2, 1fr)';
+            }
+          }
+        });
+
+        // استمع لتغييرات الاتجاه
+        window.addEventListener('orientationchange', (e) => {
+          console.log('🔄 تم تغيير اتجاه الشاشة إلى:', e.detail.orientation);
+          
+          // إضافة فئات CSS حسب الاتجاه
+          document.body.classList.remove('portrait-mode', 'landscape-mode');
+          document.body.classList.add(e.detail.orientation + '-mode');
+          
+          // تحسين شريط الأدوات في الوضع الأفقي للهواتف
+          if (e.detail.orientation === 'landscape' && window.responsiveHelper.isMobile()) {
+            const toolbar = document.querySelector('.toolbar');
+            if (toolbar) {
+              toolbar.style.padding = '8px 12px';
+            }
+            
+            const toolbarRow = document.querySelector('.toolbar-row');
+            if (toolbarRow) {
+              toolbarRow.style.flexDirection = 'row';
+              toolbarRow.style.gap = '10px';
+            }
+          }
+        });
+
+        // تحسين تجربة اللمس للأجهزة المحمولة
+        if (window.responsiveHelper.isTouchDevice()) {
+          // تحسين بطاقات الطلاب
+          const observerCallback = (mutations) => {
+            mutations.forEach((mutation) => {
+              if (mutation.type === 'childList') {
+                mutation.addedNodes.forEach((node) => {
+                  if (node.nodeType === 1 && node.classList.contains('student-card')) {
+                    // تحسين استجابة اللمس
+                    node.addEventListener('touchstart', function() {
+                      this.style.transform = 'scale(0.98)';
+                    }, { passive: true });
+                    
+                    node.addEventListener('touchend', function() {
+                      setTimeout(() => {
+                        this.style.transform = '';
+                      }, 100);
+                    }, { passive: true });
+                  }
+                });
+              }
+            });
+          };
+
+          const observer = new MutationObserver(observerCallback);
+          const studentsGrid = document.getElementById('studentsGrid');
+          if (studentsGrid) {
+            observer.observe(studentsGrid, { childList: true });
+          }
+
+          // تحسين الأزرار
+          const actionButtons = document.querySelectorAll('.btn, .action-btn');
+          actionButtons.forEach(button => {
+            button.style.minHeight = '44px';
+            button.style.minWidth = '44px';
+          });
+        }
+
+        // تحسين البحث للأجهزة المحمولة
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput && window.responsiveHelper.isMobile()) {
+          // تحسين حجم الخط لمنع التكبير في iOS
+          searchInput.style.fontSize = '16px';
+          
+          // إضافة تأثير التركيز
+          searchInput.addEventListener('focus', function() {
+            this.parentElement.style.transform = 'scale(1.02)';
+          });
+          
+          searchInput.addEventListener('blur', function() {
+            this.parentElement.style.transform = '';
+          });
+        }
+
+        // تحسين الفلاتر للأجهزة المحمولة
+        const filterSelects = document.querySelectorAll('.filter-select');
+        if (window.responsiveHelper.isMobile()) {
+          filterSelects.forEach(select => {
+            select.style.fontSize = '16px';
+            select.style.minHeight = '44px';
+          });
+        }
+
+        // تحسين الأداء للأجهزة الضعيفة
+        const reduceAnimations = window.responsiveHelper.isMobile() && 
+                                 window.devicePixelRatio < 2;
+        
+        if (reduceAnimations) {
+          console.log('🔧 تقليل التأثيرات البصرية للأجهزة الضعيفة');
+          
+          const style = document.createElement('style');
+          style.textContent = `
+            .student-card { transition: transform 0.1s ease !important; }
+            .stat-card { transition: all 0.1s ease !important; }
+            .btn { transition: all 0.1s ease !important; }
+            * { animation-duration: 0.1s !important; }
+          `;
+          document.head.appendChild(style);
+        }
+
+        // تحسين عرض الإحصائيات
+        function updateResponsiveStats() {
+          const statCards = document.querySelectorAll('.stat-card');
+          if (window.responsiveHelper.isMobile()) {
+            statCards.forEach(card => {
+              const number = card.querySelector('.stat-number');
+              const label = card.querySelector('.stat-label');
+              if (number) number.style.fontSize = 'clamp(1.2rem, 4vw, 1.5rem)';
+              if (label) label.style.fontSize = 'clamp(0.7rem, 2.5vw, 0.8rem)';
+            });
+          }
+        }
+
+        // تطبيق التحسينات عند التحميل
+        setTimeout(updateResponsiveStats, 500);
+      }
+    });
+
+    // تحسين أداء التمرير على الأجهزة المحمولة
+    let scrollTicking = false;
+    function updateOnScroll() {
+      if (!scrollTicking) {
+        requestAnimationFrame(() => {
+          // تحسينات أداء التمرير
+          scrollTicking = false;
+        });
+        scrollTicking = true;
+      }
+    }
+
+    if (window.responsiveHelper && window.responsiveHelper.isMobile()) {
+      window.addEventListener('scroll', updateOnScroll, { passive: true });
+    }
+
+    // تحسين إدارة الذاكرة على الأجهزة المحمولة
+    if (window.responsiveHelper && window.responsiveHelper.isMobile()) {
+      // تنظيف الذاكرة عند إخفاء الصفحة
+      document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+          // تنظيف المتغيرات غير الضرورية
+          if (window.gc) {
+            window.gc();
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
