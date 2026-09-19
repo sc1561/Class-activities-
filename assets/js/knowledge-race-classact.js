@@ -1,1 +1,174 @@
-(function(){"use strict";const state={mode:"normal",pack:null,queue:[],index:0,wrong:[]};function shuffle(items){const a=[...items];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}function valid(p){return p&&p.format==="classact"&&p.version==="1.0"&&(p.activityType==="knowledge-race"||p.activityType==="random")&&Array.isArray(p.questions)&&p.questions.length&&p.questions.every(q=>q&&typeof q.question==="string"&&q.question.trim()&&typeof q.answer==="string"&&q.answer.trim())}function prepare(){const list=state.pack.questions.map(q=>({...q}));state.queue=state.pack.settings&&state.pack.settings.questionOrder==="sequential"?list:shuffle(list);state.index=0;state.wrong=[]}function current(){if(state.index>=state.queue.length){if(state.pack.settings&&state.pack.settings.repeatWrongQuestions&&state.wrong.length){state.queue=[...state.wrong];state.wrong=[];state.index=0}else return null}return state.queue[state.index]}function render(){const card=document.getElementById("classactRaceQuestion"),q=current();if(!card||state.mode!=="imported"||!q){if(card)card.classList.remove("visible");return}card.querySelector(".classact-question-title").textContent=`السؤال ${state.index+1} من ${state.queue.length}`;card.querySelector(".classact-question-text").textContent=q.question;card.querySelector(".classact-question-meta").textContent=`${q.points||10} نقاط • ${q.time||state.pack.settings?.defaultTime||30} ثانية`;card.querySelector(".classact-hint").textContent=q.hint?`💡 ${q.hint}`:"لا يوجد تلميح لهذا السؤال.";card.querySelector(".classact-answer").textContent=`✅ الإجابة النموذجية: ${q.answer}`;card.querySelector(".classact-hint").classList.remove("visible");card.querySelector(".classact-answer").classList.remove("visible");card.classList.add("visible")}function advance(wasWrong){const q=current();if(q&&wasWrong)state.wrong.push(q);state.index++;setTimeout(render,250)}function mount(){const selection=document.getElementById("selectionPanel"),control=document.getElementById("controlPanel");if(!selection||!control)return;selection.insertAdjacentHTML("afterbegin",`<section class="classact-race-loader"><h3>📚 أسئلة سباق المعرفة</h3><div class="classact-race-modes"><button type="button" class="classact-race-mode active" data-mode="normal">سباق عادي</button><button type="button" class="classact-race-mode" data-mode="imported">سباق بأسئلة جاهزة</button></div><div class="classact-race-import"><label class="classact-race-file">📂 استيراد ملف .classact<input id="classactRaceFile" type="file" accept=".classact,application/json"></label><div class="classact-race-status">اختر ملفًا أُنشئ من مركز إعداد الأنشطة.</div></div></section>`);control.querySelector(".current-player").insertAdjacentHTML("afterend",`<section id="classactRaceQuestion" class="classact-question-card"><div class="classact-question-title"></div><div class="classact-question-text"></div><div class="classact-question-meta"></div><div class="classact-hint"></div><div class="classact-answer"></div><div class="classact-question-actions"><button type="button" data-action="hint">💡 تلميح</button><button type="button" data-action="answer">👁️ إظهار الإجابة</button></div></section>`);const modes=selection.querySelectorAll(".classact-race-mode"),importBox=selection.querySelector(".classact-race-import"),status=selection.querySelector(".classact-race-status");modes.forEach(b=>b.onclick=()=>{state.mode=b.dataset.mode;modes.forEach(x=>x.classList.toggle("active",x===b));importBox.classList.toggle("visible",state.mode==="imported");render()});document.getElementById("classactRaceFile").onchange=async e=>{const file=e.target.files[0];if(!file)return;try{const p=JSON.parse(await file.text());if(!valid(p))throw new Error();state.pack=p;prepare();status.classList.remove("error");status.textContent=`تم تحميل «${p.metadata?.title||file.name}» — ${p.questions.length} سؤالًا.`}catch(_){state.pack=null;status.classList.add("error");status.textContent="الملف غير صالح أو لا يحتوي على أسئلة سباق المعرفة."}};document.getElementById("startRaceBtn").addEventListener("click",e=>{if(state.mode==="imported"&&!state.pack){e.preventDefault();e.stopImmediatePropagation();status.classList.add("error");status.textContent="استورد ملف النشاط أولًا قبل بدء السباق."}else if(state.mode==="imported")prepare()},true);document.getElementById("startQuestionBtn").addEventListener("click",()=>setTimeout(render,50));document.getElementById("correctBtn").addEventListener("click",()=>{if(state.mode==="imported")advance(false)},true);document.getElementById("wrongBtn").addEventListener("click",()=>{if(state.mode==="imported")advance(true)},true);control.querySelector('[data-action="hint"]').onclick=()=>control.querySelector(".classact-hint").classList.toggle("visible");control.querySelector('[data-action="answer"]').onclick=()=>control.querySelector(".classact-answer").classList.toggle("visible")}document.readyState==="loading"?document.addEventListener("DOMContentLoaded",mount):mount()})();
+(function () {
+    "use strict";
+
+    const state = { mode: "normal", pack: null, queue: [], wrong: [], index: 0, cycle: 1 };
+
+    function shuffle(items) {
+        const result = [...items];
+        for (let index = result.length - 1; index > 0; index -= 1) {
+            const randomIndex = Math.floor(Math.random() * (index + 1));
+            [result[index], result[randomIndex]] = [result[randomIndex], result[index]];
+        }
+        return result;
+    }
+
+    function isValidPackage(pack) {
+        return Boolean(pack && pack.format === "classact" && pack.version === "1.0" &&
+            pack.activityType === "knowledge-race" && Array.isArray(pack.questions) &&
+            pack.questions.length && pack.questions.every(question => question &&
+                typeof question.question === "string" && question.question.trim() &&
+                typeof question.answer === "string" && question.answer.trim()));
+    }
+
+    function orderedQuestions() {
+        const questions = state.pack.questions.map(question => ({ ...question }));
+        return state.pack.settings?.questionOrder === "sequential" ? questions : shuffle(questions);
+    }
+
+    function prepareQuestions() {
+        state.queue = orderedQuestions();
+        state.wrong = [];
+        state.index = 0;
+        state.cycle = 1;
+    }
+
+    function currentQuestion() {
+        if (!state.pack) return null;
+        if (state.index >= state.queue.length) {
+            if (state.pack.settings?.repeatWrongQuestions && state.wrong.length) {
+                state.queue = [...state.wrong];
+                state.wrong = [];
+            } else {
+                state.queue = orderedQuestions();
+                state.cycle += 1;
+            }
+            state.index = 0;
+        }
+        return state.queue[state.index] || null;
+    }
+
+    function ensureQuestionTools(questionBox) {
+        let tools = questionBox.querySelector("#classactRaceTools");
+        if (tools) return tools;
+
+        tools = document.createElement("div");
+        tools.id = "classactRaceTools";
+        tools.innerHTML = `<div id="classactRaceMeta"></div><div id="classactRaceHint"></div><div id="classactRaceAnswer"></div><div class="classact-question-actions"><button type="button" data-classact-action="hint">💡 تلميح</button><button type="button" data-classact-action="answer">👁️ إظهار الإجابة</button></div>`;
+        const evaluationButtons = questionBox.querySelector("#raceCorrectBtn")?.parentElement;
+        questionBox.insertBefore(tools, evaluationButtons || null);
+        tools.querySelector('[data-classact-action="hint"]').onclick = () => tools.querySelector("#classactRaceHint").classList.toggle("visible");
+        tools.querySelector('[data-classact-action="answer"]').onclick = () => tools.querySelector("#classactRaceAnswer").classList.toggle("visible");
+        return tools;
+    }
+
+    function renderQuestion() {
+        if (state.mode !== "imported" || !state.pack) return;
+        const questionBox = document.getElementById("raceQuestionBox");
+        const questionText = document.getElementById("raceQuestion");
+        const question = currentQuestion();
+        if (!questionBox || !questionText || !question) return;
+
+        const tools = ensureQuestionTools(questionBox);
+        const cycleText = state.cycle > 1 ? ` • الدورة ${state.cycle}` : "";
+        questionText.textContent = question.question;
+        questionText.classList.add("classact-imported-question");
+        tools.querySelector("#classactRaceMeta").textContent = `السؤال ${state.index + 1} من ${state.queue.length}${cycleText} • ${question.points || 10} نقاط • ${question.time || state.pack.settings?.defaultTime || 30} ثانية`;
+        tools.querySelector("#classactRaceHint").textContent = question.hint ? `💡 ${question.hint}` : "لا يوجد تلميح لهذا السؤال.";
+        tools.querySelector("#classactRaceAnswer").textContent = `✅ الإجابة النموذجية: ${question.answer}`;
+        tools.querySelector("#classactRaceHint").classList.remove("visible");
+        tools.querySelector("#classactRaceAnswer").classList.remove("visible");
+        tools.hidden = false;
+    }
+
+    function advanceQuestion(wasWrong) {
+        const question = currentQuestion();
+        if (question && wasWrong) state.wrong.push(question);
+        state.index += 1;
+        window.setTimeout(renderQuestion, 260);
+    }
+
+    function hideImportedTools() {
+        const tools = document.getElementById("classactRaceTools");
+        if (tools) tools.hidden = true;
+    }
+
+    function mountLoader() {
+        const selectionPanel = document.getElementById("selectionPanel");
+        if (!selectionPanel || document.getElementById("classactRaceLoader")) return;
+
+        selectionPanel.insertAdjacentHTML("afterbegin", `<section id="classactRaceLoader" class="classact-race-loader"><h3>📚 أسئلة سباق المعرفة</h3><div class="classact-race-modes"><button type="button" class="classact-race-mode active" data-mode="normal">سباق عادي</button><button type="button" class="classact-race-mode" data-mode="imported">سباق بأسئلة جاهزة</button></div><div class="classact-race-import"><label class="classact-race-file">📂 استيراد ملف .classact<input id="classactRaceFile" type="file" accept=".classact,application/json"></label><div class="classact-race-status">اختر ملف سباق معرفة من مركز إعداد الأنشطة.</div></div></section>`);
+
+        const modes = selectionPanel.querySelectorAll(".classact-race-mode");
+        const importBox = selectionPanel.querySelector(".classact-race-import");
+        const status = selectionPanel.querySelector(".classact-race-status");
+
+        modes.forEach(button => button.onclick = () => {
+            state.mode = button.dataset.mode;
+            modes.forEach(item => item.classList.toggle("active", item === button));
+            importBox.classList.toggle("visible", state.mode === "imported");
+            if (state.mode === "normal") hideImportedTools();
+        });
+
+        document.getElementById("classactRaceFile").onchange = async event => {
+            const file = event.target.files[0];
+            if (!file) return;
+            try {
+                const pack = JSON.parse(await file.text());
+                if (!isValidPackage(pack)) throw new Error("invalid package");
+                state.pack = pack;
+                prepareQuestions();
+                status.classList.remove("error");
+                status.textContent = `تم تحميل «${pack.metadata?.title || file.name}» — ${pack.questions.length} سؤالًا.`;
+            } catch (error) {
+                state.pack = null;
+                status.classList.add("error");
+                status.textContent = "هذا الملف غير مخصص لسباق المعرفة. أنشئ ملفًا جديدًا بعد اختيار سباق المعرفة من مركز الإعداد.";
+            }
+        };
+
+        document.getElementById("startRaceBtn").addEventListener("click", event => {
+            if (state.mode === "imported" && !state.pack) {
+                event.preventDefault();
+                event.stopImmediatePropagation();
+                status.classList.add("error");
+                status.textContent = "استورد ملف سباق المعرفة أولًا قبل بدء السباق.";
+            } else if (state.mode === "imported") {
+                prepareQuestions();
+            }
+        }, true);
+    }
+
+    function handleDynamicRaceClick(event) {
+        if (state.mode !== "imported" || !state.pack) return;
+        const button = event.target.closest("button");
+        if (!button) return;
+
+        if (button.id === "startRealRaceBtn") prepareQuestions();
+        if (button.id === "startRoundBtn") {
+            window.setTimeout(renderQuestion, 50);
+            window.setTimeout(renderQuestion, 300);
+        }
+        if (button.id === "raceCorrectBtn") advanceQuestion(false);
+        if (button.id === "raceWrongBtn") advanceQuestion(true);
+    }
+
+    function observeDynamicRace() {
+        document.addEventListener("click", handleDynamicRaceClick, true);
+        const observer = new MutationObserver(() => {
+            const questionBox = document.getElementById("raceQuestionBox");
+            const questionText = document.getElementById("raceQuestion");
+            const question = state.mode === "imported" && state.pack ? currentQuestion() : null;
+            if (questionBox && questionText && question && questionBox.style.display !== "none" && questionText.textContent !== question.question) {
+                window.setTimeout(renderQuestion, 0);
+            }
+        });
+        observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["style"] });
+    }
+
+    function mount() {
+        mountLoader();
+        observeDynamicRace();
+    }
+
+    document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", mount) : mount();
+})();
