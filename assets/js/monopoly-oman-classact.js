@@ -48,7 +48,6 @@
   let challengeOpen = false;
   let correctCount = 0;
   let wrongCount = 0;
-  let startRetryPending = false;
 
   const ready = (fn) => document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", fn) : fn();
   ready(init);
@@ -147,18 +146,7 @@
     guide.querySelector(".cam-guide-start").onclick = () => { closeGuide(); panel.scrollIntoView({behavior:"smooth",block:"center"}); };
     guide.addEventListener("click", (event) => { if (event.target === guide) closeGuide(); });
 
-    if (startButton) {
-      startButton.addEventListener("click", () => {
-        if (startRetryPending) return;
-        startRetryPending = true;
-        window.setTimeout(() => {
-          const waiting = !startButton.disabled && rollButton.disabled;
-          startRetryPending = false;
-          if (waiting) startButton.click();
-          refreshGuide();
-        }, 700);
-      });
-    }
+    if (startButton) startButton.addEventListener("click", () => window.setTimeout(refreshGuide, 350));
 
     classSelect.addEventListener("change", refreshGuide);
     playersCountInput?.addEventListener("change", refreshGuide);
@@ -272,9 +260,9 @@
     }
     function updateScore(){ overlay.querySelector(".cam-score").textContent=`النتيجة المعرفية: ${correctCount} صحيحة • ${wrongCount} تحتاج مراجعة`; }
     function currentPlayerName(){
+      const headings=[...document.querySelectorAll("h2,h3,h4,.player-name")];
       const explicit=document.querySelector('[data-current-player],.current-player,.active-player,[aria-current="true"]');
-      const candidates=[explicit,...document.querySelectorAll("h2,h3,h4,.player-name,.turn-indicator")].filter(Boolean);
-      const found=candidates.find(e=>/دورك|الدور الآن|دور اللاعب|اللاعب الحالي/.test(e.textContent||"") || e.matches?.('[data-current-player],.current-player,.active-player,[aria-current="true"]'));
+      const found=headings.find(e=>/دورك/.test(e.textContent||"")) || explicit?.querySelector?.("h2,h3,h4,.player-name") || explicit;
       return (found?.dataset?.currentPlayer || found?.textContent || "").replace(/👑|👤|◀|دورك|الدور الآن|دور اللاعب|اللاعب الحالي|في السجن|[:：]/g,"").trim();
     }
     function showDiceHelp(message){ diceHelp.textContent=message; diceHelp.classList.add("show"); window.clearTimeout(showDiceHelp.timer); showDiceHelp.timer=window.setTimeout(()=>diceHelp.classList.remove("show"),5000); }
