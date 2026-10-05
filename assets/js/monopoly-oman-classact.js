@@ -147,8 +147,8 @@
     panel.querySelector(".cam-guide-btn").onclick = openGuide;
     turnHud.querySelector(".cam-mini-settings").onclick = openGuide;
     primaryAction.onclick = () => {
-      if (!endTurnButton.disabled) { endTurnButton.click(); return; }
       if (!rollButton.disabled && !rollInProgress && !challengeOpen) rollButton.click();
+      else if (!endTurnButton.disabled) endTurnButton.click();
     };
     guide.querySelector(".cam-guide-close").onclick = closeGuide;
     guide.querySelector(".cam-guide-start").onclick = () => { closeGuide(); panel.scrollIntoView({behavior:"smooth",block:"center"}); };
@@ -233,8 +233,8 @@
       turnHud.style.setProperty("--cam-player-color", playerColor(player));
       primaryAction.className="cam-primary-action";
       if(challengeOpen){ primaryAction.textContent="🧠 أجب عن السؤال"; primaryAction.disabled=true; return setHudInstruction("🧠 السؤال مفتوح الآن — أجب ثم اختر صحيحة أو خاطئة."); }
-      if(!endTurnButton.disabled){ primaryAction.textContent="✅ إنهاء الدور"; primaryAction.disabled=false; primaryAction.classList.add("end"); return setHudInstruction("✅ أكمل إجراءات المربع ثم اضغط إنهاء الدور."); }
       if(!rollButton.disabled && !rollInProgress){ primaryAction.textContent="🎲 رمي النرد"; primaryAction.disabled=false; primaryAction.classList.add("ready"); return setHudInstruction("🎲 دورك جاهز — اضغط زر رمي النرد."); }
+      if(!endTurnButton.disabled){ primaryAction.textContent="✅ إنهاء الدور"; primaryAction.disabled=false; primaryAction.classList.add("end"); return setHudInstruction("✅ أكمل إجراءات المربع ثم اضغط إنهاء الدور."); }
       primaryAction.textContent=rollInProgress?"⏳ جاري التحريك…":"⏳ انتظر"; primaryAction.disabled=true;
       setHudInstruction("⏳ انتظر انتقال الدور إلى اللاعب التالي.");
     }
