@@ -15,7 +15,24 @@
     const rollButton = document.getElementById("rollDice");
     const endTurnButton = document.getElementById("endTurn");
     const classSelect = document.getElementById("classSelect");
+    const startButton = document.getElementById("startGameBtn");
     if (!rollButton || !endTurnButton || !classSelect) return;
+
+    // The original game finishes player setup asynchronously. A very quick
+    // first click on "Start game" can therefore be ignored. Retry it once
+    // after setup settles, but only when the game still has not started.
+    if (startButton) {
+      let startRetryPending = false;
+      startButton.addEventListener("click", () => {
+        if (startRetryPending) return;
+        startRetryPending = true;
+        window.setTimeout(() => {
+          const gameStillWaiting = !startButton.disabled && rollButton.disabled;
+          startRetryPending = false;
+          if (gameStillWaiting) startButton.click();
+        }, 700);
+      });
+    }
 
     const panel = document.createElement("section");
     panel.id = "classactMonopolyLoader";
