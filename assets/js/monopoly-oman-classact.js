@@ -48,6 +48,7 @@
   let challengeOpen = false;
   let correctCount = 0;
   let wrongCount = 0;
+  let rollInProgress = false;
 
   const ready = (fn) => document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", fn) : fn();
   ready(init);
@@ -72,9 +73,9 @@
         .cam-title{display:flex;align-items:center;justify-content:space-between;gap:10px}.cam-title h3{margin:0;font-size:1.35rem}.cam-guide-btn{border:0;border-radius:12px;padding:9px 13px;background:#475569;color:#fff;font-weight:800;cursor:pointer}.cam-intro{margin:8px 0 12px}.cam-mode-row,.cam-actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}.cam-mode{flex:1;min-width:230px;border:3px solid #0f766e;background:#fff;color:#0f766e;border-radius:15px;padding:14px 18px;font-size:1rem;font-weight:900;cursor:pointer}.cam-mode.active{background:#0f766e;color:#fff;box-shadow:0 0 0 4px rgba(15,118,110,.16)}.cam-import{display:none;margin-top:12px}.cam-import.active{display:block}.cam-file{display:block;margin:10px auto;max-width:460px;width:100%}.cam-status{min-height:28px;margin-top:10px;padding:8px;border-radius:10px;background:#f1f5f9;color:#0f766e;font-weight:800}.cam-details{margin-top:10px}.cam-details summary{cursor:pointer;color:#475569;font-weight:800}.cam-count-guide{margin:9px auto 0;max-width:680px;background:#fff7d6;border:1px solid #f2c94c;border-radius:12px;padding:9px;font-weight:700}.cam-progress{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:10px}.cam-step{padding:7px 4px;border-radius:10px;background:#e2e8f0;font-size:.8rem;font-weight:800}.cam-step.done{background:#dcfce7;color:#166534}.cam-step.current{outline:3px solid #f59e0b;background:#fff7d6}
         .cam-overlay,.cam-guide-overlay{position:fixed;inset:0;z-index:100000;background:rgba(4,20,26,.86);display:none;align-items:center;justify-content:center;padding:18px}.cam-overlay.active,.cam-guide-overlay.active{display:flex}.cam-card,.cam-guide-card{background:#fff;color:#172033;border:4px solid #d4af37;border-radius:24px;max-width:850px;width:100%;padding:28px;text-align:center;box-shadow:0 22px 70px rgba(0,0,0,.45);font-family:Cairo,sans-serif;max-height:92vh;overflow:auto}.cam-guide-card{text-align:right}.cam-guide-card h2{text-align:center}.cam-guide-list{display:grid;gap:12px}.cam-guide-item{border:2px solid #e2e8f0;border-radius:15px;padding:14px}.cam-guide-item strong{color:#0f766e;font-size:1.08rem}.cam-guide-footer{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:18px}.cam-guide-footer button{border:0;border-radius:12px;padding:12px 20px;font-weight:800;cursor:pointer;color:#fff;background:#0f766e}.cam-guide-footer .secondary{background:#475569}
         .cam-counter{color:#0f766e;font-weight:800}.cam-player{color:#7c3aed;font-weight:900;margin-top:6px}.cam-question{font-size:clamp(1.35rem,3vw,2.15rem);line-height:1.7;font-weight:800;margin:20px 0}.cam-meta{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}.cam-badge{background:#eef2ff;border-radius:999px;padding:6px 12px;font-weight:800}.cam-hint,.cam-answer{display:none;padding:14px;border-radius:12px;margin:12px auto}.cam-hint.show{display:block;background:#fff7d6}.cam-answer.show{display:block;background:#dcfce7;font-size:1.35rem;font-weight:800}.cam-actions button{border:0;border-radius:12px;padding:11px 17px;color:#fff;font-family:Cairo,sans-serif;font-weight:800;cursor:pointer}.cam-hint-btn{background:#d97706}.cam-answer-btn{background:#4f46e5}.cam-correct{background:#15803d}.cam-wrong{background:#b91c1c}.cam-score{margin-top:12px;font-weight:800;color:#334155}
-        .cam-turn-hud{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:99990;width:min(94vw,760px);display:none;grid-template-columns:minmax(180px,1fr) auto;align-items:center;gap:12px;background:rgba(15,23,42,.97);color:#fff;border:3px solid #d4af37;border-radius:22px;padding:12px 16px;box-shadow:0 16px 45px rgba(0,0,0,.42);font-family:Cairo,sans-serif}.cam-game-live .cam-turn-hud{display:grid}.cam-turn-info{text-align:right}.cam-turn-label{font-size:.82rem;color:#fde68a;font-weight:800}.cam-turn-player{font-size:clamp(1.15rem,2.8vw,1.65rem);font-weight:900;line-height:1.35}.cam-turn-instruction{font-size:.87rem;color:#cbd5e1;font-weight:700}.cam-turn-actions{display:flex;gap:9px;align-items:center}.cam-turn-actions #rollDice{min-width:170px!important;min-height:60px!important;font-size:1.2rem!important;font-weight:900!important;background:#f59e0b!important;color:#172033!important;border:0!important;border-radius:16px!important;box-shadow:0 6px 0 #b45309!important}.cam-turn-actions #rollDice:not(:disabled){animation:camPulse 1.6s infinite}.cam-turn-actions #rollDice:disabled{opacity:.48!important;box-shadow:none!important}.cam-turn-actions #endTurn{min-height:52px!important;border-radius:14px!important;font-weight:800!important}.cam-mini-settings{width:44px;height:44px;border:0;border-radius:50%;background:#334155;color:#fff;font-size:1.15rem;cursor:pointer}.cam-dice-help{display:none!important}@keyframes camPulse{50%{transform:scale(1.045);box-shadow:0 8px 0 #b45309,0 0 0 9px rgba(245,158,11,.18)}}
+        .cam-turn-hud{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:99990;width:min(94vw,760px);display:none;grid-template-columns:minmax(180px,1fr) auto;align-items:center;gap:12px;background:rgba(15,23,42,.97);color:#fff;border:4px solid var(--cam-player-color,#d4af37);border-radius:22px;padding:12px 16px;box-shadow:0 16px 45px rgba(0,0,0,.42);font-family:Cairo,sans-serif}.cam-game-live .cam-turn-hud{display:grid}.cam-turn-info{text-align:right}.cam-turn-label{font-size:.82rem;color:#fde68a;font-weight:800}.cam-turn-player{font-size:clamp(1.15rem,2.8vw,1.65rem);font-weight:900;line-height:1.35;color:var(--cam-player-color,#fff)}.cam-turn-instruction{font-size:.87rem;color:#cbd5e1;font-weight:700}.cam-turn-actions{display:flex;gap:9px;align-items:center}.cam-primary-action{min-width:210px;min-height:62px;padding:10px 20px;border:0;border-radius:16px;background:#f59e0b;color:#172033;font-family:Cairo,sans-serif;font-size:1.18rem;font-weight:900;cursor:pointer;box-shadow:0 6px 0 #b45309}.cam-primary-action.ready{animation:camPulse 1.6s infinite}.cam-primary-action.end{background:#22c55e;color:#052e16;box-shadow:0 6px 0 #15803d}.cam-primary-action:disabled{opacity:.55;cursor:not-allowed;box-shadow:none}.cam-native-action{display:none!important}.cam-mini-settings{width:44px;height:44px;border:0;border-radius:50%;background:#334155;color:#fff;font-size:1.15rem;cursor:pointer}.cam-dice-help{display:none!important}@keyframes camPulse{50%{transform:scale(1.045);box-shadow:0 8px 0 #b45309,0 0 0 9px rgba(245,158,11,.18)}}
         body.cam-game-live{padding-bottom:108px}.cam-game-live #startGameBtn,.cam-game-live #setupPlayersBtn,.cam-game-live #classSelect,.cam-game-live #playersCount,.cam-game-live label[for="classSelect"],.cam-game-live label[for="playersCount"]{display:none!important}.cam-original-placeholder{display:none}
-        @media(max-width:650px){.cam-title{align-items:flex-start}.cam-progress{grid-template-columns:1fr 1fr}.cam-card,.cam-guide-card{padding:18px}.cam-actions button{width:100%}.cam-turn-hud{bottom:7px;padding:9px;grid-template-columns:1fr}.cam-turn-info{text-align:center}.cam-turn-actions{justify-content:center}.cam-turn-actions #rollDice{min-width:155px!important;min-height:54px!important}.cam-turn-actions #endTurn{min-height:48px!important}body.cam-game-live{padding-bottom:165px}}
+        @media(max-width:650px){.cam-title{align-items:flex-start}.cam-progress{grid-template-columns:1fr 1fr}.cam-card,.cam-guide-card{padding:18px}.cam-actions button{width:100%}.cam-turn-hud{bottom:7px;padding:9px;grid-template-columns:1fr}.cam-turn-info{text-align:center}.cam-turn-actions{justify-content:center}.cam-primary-action{min-width:210px;min-height:56px}body.cam-game-live{padding-bottom:165px}}
       </style>
       <div class="cam-title"><h3>🎓 تجهيز مونوبولي التعليمي</h3><button type="button" class="cam-guide-btn">❔ طريقة اللعب</button></div>
       <p class="cam-intro">اختر نوع اللعبة فقط، ثم استخدم إعدادات الصف واللاعبين الموجودة أسفل هذه البطاقة.</p>
@@ -101,13 +102,16 @@
     const turnHud = document.createElement("aside");
     turnHud.className = "cam-turn-hud";
     turnHud.setAttribute("aria-live", "polite");
-    turnHud.innerHTML = `<div class="cam-turn-info"><div class="cam-turn-label">الدور الآن</div><div class="cam-turn-player">بانتظار بدء اللعبة</div><div class="cam-turn-instruction">اختر اللاعبين ثم ابدأ اللعبة</div></div><div class="cam-turn-actions"><span class="cam-roll-slot"></span><span class="cam-end-slot"></span><button type="button" class="cam-mini-settings" title="فتح التعليمات">❔</button></div>`;
+    turnHud.innerHTML = `<div class="cam-turn-info"><div class="cam-turn-label">الدور الآن</div><div class="cam-turn-player">بانتظار بدء اللعبة</div><div class="cam-turn-instruction">اختر اللاعبين ثم ابدأ اللعبة</div></div><div class="cam-turn-actions"><button type="button" class="cam-primary-action" disabled>⏳ انتظر</button><span class="cam-roll-slot"></span><span class="cam-end-slot"></span><button type="button" class="cam-mini-settings" title="فتح التعليمات">❔</button></div>`;
     document.body.appendChild(turnHud);
     const rollPlaceholder = document.createElement("span");
     const endPlaceholder = document.createElement("span");
     rollPlaceholder.className = endPlaceholder.className = "cam-original-placeholder";
     rollButton.before(rollPlaceholder);
     endTurnButton.before(endPlaceholder);
+    rollButton.classList.add("cam-native-action");
+    endTurnButton.classList.add("cam-native-action");
+    const primaryAction = turnHud.querySelector(".cam-primary-action");
 
     const importBox = panel.querySelector(".cam-import");
     const status = panel.querySelector(".cam-status");
@@ -142,6 +146,10 @@
 
     panel.querySelector(".cam-guide-btn").onclick = openGuide;
     turnHud.querySelector(".cam-mini-settings").onclick = openGuide;
+    primaryAction.onclick = () => {
+      if (!endTurnButton.disabled) { endTurnButton.click(); return; }
+      if (!rollButton.disabled && !rollInProgress && !challengeOpen) rollButton.click();
+    };
     guide.querySelector(".cam-guide-close").onclick = closeGuide;
     guide.querySelector(".cam-guide-start").onclick = () => { closeGuide(); panel.scrollIntoView({behavior:"smooth",block:"center"}); };
     guide.addEventListener("click", (event) => { if (event.target === guide) closeGuide(); });
@@ -153,7 +161,7 @@
     setupButton?.addEventListener("click", () => window.setTimeout(refreshGuide, 500));
 
     rollButton.addEventListener("click", (event) => {
-      if (challengeOpen) { event.preventDefault(); event.stopImmediatePropagation(); return; }
+      if (challengeOpen || rollInProgress) { event.preventDefault(); event.stopImmediatePropagation(); return; }
       if (mode === "imported" && (!importedPack || !queue.length)) {
         event.preventDefault(); event.stopImmediatePropagation();
         status.textContent = "❌ استورد قالب الأسئلة أولًا، أو اختر مونوبولي الأصلي";
@@ -161,8 +169,13 @@
         panel.scrollIntoView({behavior:"smooth",block:"center"});
         return;
       }
+      rollInProgress = true;
       setHudInstruction("🎲 تم رمي النرد… انتظر حركة القطعة ثم أجب عن السؤال.");
       window.setTimeout(showChallenge, 1650);
+    }, true);
+    endTurnButton.addEventListener("click", () => {
+      rollInProgress = false;
+      window.setTimeout(refreshTurnHud, 120);
     }, true);
 
     overlay.querySelector(".cam-hint-btn").onclick = () => overlay.querySelector(".cam-hint").classList.add("show");
@@ -217,9 +230,12 @@
       const playerText=player ? `👤 ${player}` : "👤 اللاعب الحالي";
       const playerNode=turnHud.querySelector(".cam-turn-player");
       if(playerNode.textContent!==playerText) playerNode.textContent=playerText;
-      if(challengeOpen) return setHudInstruction("🧠 السؤال مفتوح الآن — أجب ثم اختر صحيحة أو خاطئة.");
-      if(!rollButton.disabled) return setHudInstruction("🎲 دورك جاهز — اضغط زر رمي النرد.");
-      if(!endTurnButton.disabled) return setHudInstruction("✅ أكمل إجراءات المربع ثم اضغط إنهاء الدور.");
+      turnHud.style.setProperty("--cam-player-color", playerColor(player));
+      primaryAction.className="cam-primary-action";
+      if(challengeOpen){ primaryAction.textContent="🧠 أجب عن السؤال"; primaryAction.disabled=true; return setHudInstruction("🧠 السؤال مفتوح الآن — أجب ثم اختر صحيحة أو خاطئة."); }
+      if(!endTurnButton.disabled){ primaryAction.textContent="✅ إنهاء الدور"; primaryAction.disabled=false; primaryAction.classList.add("end"); return setHudInstruction("✅ أكمل إجراءات المربع ثم اضغط إنهاء الدور."); }
+      if(!rollButton.disabled && !rollInProgress){ primaryAction.textContent="🎲 رمي النرد"; primaryAction.disabled=false; primaryAction.classList.add("ready"); return setHudInstruction("🎲 دورك جاهز — اضغط زر رمي النرد."); }
+      primaryAction.textContent=rollInProgress?"⏳ جاري التحريك…":"⏳ انتظر"; primaryAction.disabled=true;
       setHudInstruction("⏳ انتظر انتقال الدور إلى اللاعب التالي.");
     }
 
@@ -264,6 +280,12 @@
       const explicit=document.querySelector('[data-current-player],.current-player,.active-player,[aria-current="true"]');
       const found=headings.find(e=>/دورك/.test(e.textContent||"")) || explicit?.querySelector?.("h2,h3,h4,.player-name") || explicit;
       return (found?.dataset?.currentPlayer || found?.textContent || "").replace(/👑|👤|◀|دورك|الدور الآن|دور اللاعب|اللاعب الحالي|في السجن|[:：]/g,"").trim();
+    }
+    function playerColor(name){
+      const colors=["#fbbf24","#38bdf8","#4ade80","#fb7185","#c084fc","#fb923c"];
+      const text=String(name||""); let hash=0;
+      for(let i=0;i<text.length;i++) hash=(hash*31+text.charCodeAt(i))>>>0;
+      return colors[hash%colors.length];
     }
     function showDiceHelp(message){ diceHelp.textContent=message; diceHelp.classList.add("show"); window.clearTimeout(showDiceHelp.timer); showDiceHelp.timer=window.setTimeout(()=>diceHelp.classList.remove("show"),5000); }
     function difficultyLabel(value){ return value==="hard"?"متقدم":value==="medium"?"متوسط":"سهل"; }
