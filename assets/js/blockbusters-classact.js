@@ -289,6 +289,20 @@
 
   function mountTurnBar(){const area=document.getElementById("gameArea");if(!area||document.getElementById("classactTurnBar"))return;area.insertAdjacentHTML("beforebegin",`<div id="classactTurnBar" class="classact-turn"></div>`)}
 
+  function watchOriginalVictory(){
+    const observer=new MutationObserver(()=>{
+      if(state.gameFinished||document.getElementById("classactBlockbustersFinal"))return;
+      const title=document.getElementById("victoryTitle");
+      const original=document.querySelector(".victory-modal.show,.victory-modal .modal-overlay.show,#victoryModal.show");
+      if(!title||(!original&&!title.offsetParent))return;
+      const text=title.textContent||"",team=text.includes("الأخضر")?"green":text.includes("الأحمر")?"red":null;
+      if(!team)return;
+      const detected=detectWinner(),result=detected&&detected.team===team?detected:{team,cells:[],reason:team==="green"?"أكمل صفًا أفقيًا كاملًا":"أكمل عمودًا رأسيًا كاملًا"};
+      setTimeout(()=>showFinale(result),180);
+    });
+    observer.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:["class"]});
+  }
+
   function intercept(e) {
     const cell=e.target.closest("#hexagonBoard .hex-cell"); if(!cell||cell.classList.contains("selected")||cell.classList.contains("green")||cell.classList.contains("red")||state.gameFinished)return;
     if(state.bypass===cell){state.bypass=null;return}
@@ -296,7 +310,7 @@
   }
 
   function mount() {
-    addCss(); mountLoader(); document.addEventListener("click",intercept,true);
+    addCss(); mountLoader(); watchOriginalVictory(); document.addEventListener("click",intercept,true);
     const soundBtn=document.getElementById("soundBtn");soundBtn?.addEventListener("click",()=>{state.sound=!state.sound},true);
   }
 
