@@ -93,9 +93,10 @@
   }
 
   function sound(kind) {
-    if (kind === "correct") [523,659,784].forEach((f,i)=>audioTone(f,.22,"sine",.09,i*.11));
+    // الإجابة الصحيحة والفوز لهما مؤثران في اللعبة الأصلية؛ لا نكرر الصوت هنا.
+    if (kind === "correct") return;
     if (kind === "wrong") { audioTone(210,.3,"sawtooth",.06); audioTone(155,.34,"sawtooth",.05,.16); }
-    if (kind === "win") [523,659,784,1047,1319].forEach((f,i)=>audioTone(f,.35,"triangle",.1,i*.15));
+    if (kind === "win") return;
     if (kind === "tick") audioTone(760,.06,"square",.025);
   }
 
@@ -211,9 +212,9 @@
       const first = state.activeTeam, stealing = TEAM[first].other;
       state.stats[first].wrong++; state.stats[first].answers++; state.stats[first].totalTime += elapsed(originalSeconds);
       sound("wrong"); state.phase = "steal";
-      steal.classList.add("visible"); steal.textContent = `${timedOut ? "⏰ انتهى الوقت" : "إجابة غير صحيحة"} — فرصة سرقة لـ ${TEAM[stealing].label}`;
-      root.querySelector(".classact-q-turn").textContent = `${TEAM[stealing].icon} فرصة سرقة: ${TEAM[stealing].label}`;
-      actions.innerHTML = `<button type="button" class="classact-answer-btn">👁️ إظهار الإجابة</button><button type="button" class="classact-steal-btn">⚡ سرقة ناجحة</button><button type="button" class="classact-noanswer-btn">🚫 لم يُجب أحد</button>`;
+      steal.classList.add("visible"); steal.textContent = `${timedOut ? "⏰ انتهى الوقت" : "إجابة غير صحيحة"} — فرصة إضافية لـ ${TEAM[stealing].label}`;
+      root.querySelector(".classact-q-turn").textContent = `${TEAM[stealing].icon} فرصة إضافية: ${TEAM[stealing].label}`;
+      actions.innerHTML = `<button type="button" class="classact-answer-btn">👁️ إظهار الإجابة</button><button type="button" class="classact-steal-btn">⚡ إجابة صحيحة في الفرصة الإضافية</button><button type="button" class="classact-noanswer-btn">🚫 لم يُجب أحد</button>`;
       actions.querySelector(".classact-answer-btn").onclick = ()=>answer.classList.toggle("visible");
       actions.querySelector(".classact-steal-btn").onclick = ()=>award(stealing, Math.round((Number(q.points)||100)*.75), true, 15);
       actions.querySelector(".classact-noanswer-btn").onclick = ()=>{ state.stats[stealing].wrong++; state.stats[stealing].answers++; state.activeTeam = stealing; setTurn(state.activeTeam); closeQuestion(); toast("بقي الحرف متاحًا وانتقل الدور", "info"); };
@@ -272,7 +273,7 @@
       const winner=result.team, loser=TEAM[winner].other;
       const final=document.createElement("div");final.id="classactBlockbustersFinal";final.className="classact-final";
       final.innerHTML=`<section class="classact-final-card"><div class="classact-crown">🏆</div><h2>${TEAM[winner].label} هو البطل!</h2><div class="classact-final-sub">${result.reason}</div><div class="classact-final-score">${metric(winner,"points")} نقطة مقابل ${metric(loser,"points")} نقطة</div>
-      <div class="classact-report">${[winner,loser].map((t,i)=>`<article class="classact-report-team ${t}"><h3>${i===0?"🥇 البطل":"🥈 الوصيف"} — ${TEAM[t].label}</h3><div class="classact-metrics"><div class="classact-metric"><b>${metric(t,"correct")}</b>صحيحة</div><div class="classact-metric"><b>${metric(t,"wrong")}</b>خاطئة</div><div class="classact-metric"><b>${metric(t,"steals")}</b>سرقات</div><div class="classact-metric"><b>${accuracy(t)}%</b>دقة</div><div class="classact-metric"><b>${average(t)}ث</b>متوسط الإجابة</div><div class="classact-metric"><b>${metric(t,"hints")}</b>تلميحات</div></div></article>`).join("")}</div>
+      <div class="classact-report">${[winner,loser].map((t,i)=>`<article class="classact-report-team ${t}"><h3>${i===0?"🥇 البطل":"🥈 الوصيف"} — ${TEAM[t].label}</h3><div class="classact-metrics"><div class="classact-metric"><b>${metric(t,"correct")}</b>صحيحة</div><div class="classact-metric"><b>${metric(t,"wrong")}</b>خاطئة</div><div class="classact-metric"><b>${metric(t,"steals")}</b>فرص إضافية ناجحة</div><div class="classact-metric"><b>${accuracy(t)}%</b>دقة</div><div class="classact-metric"><b>${average(t)}ث</b>متوسط الإجابة</div><div class="classact-metric"><b>${metric(t,"hints")}</b>تلميحات</div></div></article>`).join("")}</div>
       <div class="classact-final-actions"><button class="classact-again">🔄 لعبة جديدة</button><button class="classact-home">🏠 صفحة الأنشطة</button></div></section>`;
       final.querySelector(".classact-again").onclick=()=>location.reload(); final.querySelector(".classact-home").onclick=()=>location.href="../main.html"; document.body.append(final);
     },650);
