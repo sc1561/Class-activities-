@@ -41,7 +41,7 @@
   function bind(){
     document.getElementById('startBtn')?.addEventListener('click',()=>{startedAt=Date.now();lastPart=1;setTimeout(readParticipants,400)});
     document.getElementById('nextSpeakerBtn')?.addEventListener('click',()=>setTimeout(readPart,50));
-    document.getElementById('finishStoryBtn')?.addEventListener('click',()=>{readParticipants();readPart();setTimeout(updateResults,80)});
+    document.getElementById('finishStoryBtn')?.addEventListener('click',(event)=>{event.preventDefault();event.stopImmediatePropagation();readParticipants();readPart();const pause=document.getElementById('pauseBtn');if(pause&&!/متابعة|استئناف/.test(pause.textContent||''))pause.click();updateResults();const modal=document.getElementById('thankYouModal');if(modal)modal.style.display='flex';try{if(typeof confetti==='function')confetti({particleCount:180,spread:100,origin:{y:.6}})}catch(_){}},true);
     document.getElementById('modalBackBtn')?.addEventListener('click',()=>{startedAt=0;participants=[];lastPart=0});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind);else bind();
