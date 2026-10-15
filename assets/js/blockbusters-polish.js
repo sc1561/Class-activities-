@@ -9,6 +9,13 @@
       try { this.pause(); this.currentTime = 0; } catch (_) {}
       return Promise.resolve();
     }
+    // مؤثر واحد واضح في كل لحظة؛ يمنع تراكب النقرة مع النجاح أو الفوز.
+    if (this.tagName === 'AUDIO') {
+      document.querySelectorAll('audio').forEach(function (other) {
+        if (other === this) return;
+        try { other.pause(); other.currentTime = 0; } catch (_) {}
+      }, this);
+    }
     const result = nativePlay.call(this);
     return result && typeof result.catch === 'function' ? result.catch(function () {}) : result;
   };
