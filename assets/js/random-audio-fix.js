@@ -26,7 +26,7 @@ function install(){
   rolling.volume=.42;select.volume=.72;click.volume=.35;celebration.volume=.68;
   IDS.forEach(id=>{const media=get(id);media.setAttribute("playsinline","");media.preload="auto";media.load()});
   const nativePlay=HTMLMediaElement.prototype.play;
-  function direct(media){const p=nativePlay.call(media);if(p&&p.catch)p.catch(()=>{});return p}
+  function direct(media){if(!state.unlocked){reset(media);return Promise.resolve()}const p=nativePlay.call(media);if(p&&p.catch)p.catch(()=>{});return p}
   rolling.play=function(){stopExcept("rollingSound");this.currentTime=0;return direct(this)};
   select.play=function(){state.queuedCelebration=false;clearTimeout(state.celebrationFallback);reset(rolling);reset(celebration);this.currentTime=0;return direct(this)};
   click.play=function(){this.currentTime=0;return direct(this)};
