@@ -223,16 +223,56 @@
   }
 
   function award(team, points, stolen, seconds) {
-    if (!state.cell || state.gameFinished) return;
+    if (!state.cell || state.gameFinished || state.phase === "committing") return;
+    state.phase = "committing";
+    const questionModal = document.getElementById("classactBlockbustersQuestion");
+    const pressedButton = questionModal?.querySelector(".classact-correct-btn,.classact-steal-btn");
+    if (pressedButton) {
+      pressedButton.disabled = true;
+      pressedButton.textContent = "⏳ جارٍ تسجيل النقطة...";
+    }
     clearInterval(state.timer); state.timer = null;
     const target = state.cell;
     const s = state.stats[team];
     s.correct++; s.answers++; s.points += points; s.totalTime += elapsed(seconds); if (stolen) s.steals++;
-    closeQuestion(); sound("correct"); toast(`${TEAM[team].icon} إجابة صحيحة! +${points} نقطة`, "good");
-    state.bypass = target; target.click();
-    setTimeout(()=>document.getElementById(team === "green" ? "selectGreenTeamBtn" : "selectRedTeamBtn")?.click(),40);
-    state.activeTeam = TEAM[team].other; setTurn(state.activeTeam);
-    setTimeout(()=>{ highlightNearWin(); const winner = detectWinner(); if (winner) showFinale(winner); },250);
+    closeQuestion(); sound("correct");
+    // نعطّل اعتراض الحروف مؤقتًا حتى تصل النقرة الداخلية إلى منطق اللعبة الأصلي
+    // من دون أن تُعيد فتح نافذة السؤال مرة ثانية.
+    document.removeEventListener("click", intercept, true);
+    target.click();
+
+    const teamButtonId = team === "green" ? "selectGreenTeamBtn" : "selectRedTeamBtn";
+    let attempts = 0;
+    const finishAward = () => {
+      document.addEventListener("click", intercept, true);
+      state.phase = "answer";
+      state.activeTeam = TEAM[team].other;
+      setTurn(state.activeTeam);
+      toast(`${TEAM[team].icon} تم تسجيل الإجابة الصحيحة! +${points} نقطة`, "good");
+      setTimeout(()=>{ highlightNearWin(); const winner = detectWinner(); if (winner) showFinale(winner); },250);
+    };
+    const commitWhenReady = () => {
+      const selectionModal = document.getElementById("teamSelectionModal");
+      const teamButton = document.getElementById(teamButtonId);
+      const modalReady = selectionModal && (
+        selectionModal.classList.contains("show") ||
+        getComputedStyle(selectionModal).display !== "none"
+      );
+      if (teamButton && modalReady) {
+        teamButton.click();
+        finishAward();
+        return;
+      }
+      attempts++;
+      if (attempts < 24) {
+        setTimeout(commitWhenReady, 50);
+        return;
+      }
+      // حماية احتياطية للمتصفحات البطيئة: تنفيذ الاختيار مرة واحدة بعد اكتمال مهلة الانتظار.
+      teamButton?.click();
+      finishAward();
+    };
+    commitWhenReady();
   }
 
   function cellOwners() {
