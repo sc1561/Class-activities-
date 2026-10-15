@@ -3,6 +3,17 @@
 
     const state = { mode: "normal", pack: null, queue: [], wrong: [], index: 0, cycle: 1 };
 
+    // The original game calls this name at the finish line, but older builds did not define it.
+    window.showConfetti = window.showConfetti || function showConfetti() {
+        if (typeof window.confetti !== "function") return;
+        const end = Date.now() + 1800;
+        (function frame() {
+            window.confetti({ particleCount: 7, angle: 60, spread: 70, origin: { x: 0 }, colors: ["#FFD700", "#00E5FF", "#FF4D8D"] });
+            window.confetti({ particleCount: 7, angle: 120, spread: 70, origin: { x: 1 }, colors: ["#FFD700", "#00E5FF", "#FF4D8D"] });
+            if (Date.now() < end) window.requestAnimationFrame(frame);
+        }());
+    };
+
     function shuffle(items) {
         const result = [...items];
         for (let index = result.length - 1; index > 0; index -= 1) {
