@@ -160,16 +160,19 @@
       if(hasClass&&!welcome.classList.contains("ready-message")){
         welcome.classList.add("ready-message");
         welcome.innerHTML='<strong>✓ البطاقات جاهزة</strong><small>ابدأ الاختيار العشوائي أو اختر بطاقة مباشرة من الطاولة</small>';
-      } else if(!hasClass&&welcome.classList.contains("ready-message")){
-        welcome.classList.remove("ready-message");
+      } else if(!hasClass&&!welcome.dataset.cleaned){
+        welcome.dataset.cleaned="1";
         welcome.innerHTML='<strong>اختر الصف الدراسي</strong><small>ستظهر بطاقات الطلاب هنا بعد تحميل القائمة</small>';
       }
     }
     const spin=document.getElementById("spinButton");
     if(spin&&!spin.disabled&&!spin.dataset.cleanLabel){spin.innerHTML='<span aria-hidden="true">🎴</span> اختيار بطاقة عشوائيًا';spin.dataset.cleanLabel="1";}
     const total=document.querySelector('[data-stat="total"] .stat-value')?.textContent?.trim();
-    document.querySelectorAll("body *").forEach((el)=>{
-      if(el.children.length===0&&/\d+\/\d+ بطاقة متاحة/.test(el.textContent||"")) el.textContent=total?`🃏 ${total} بطاقة أسماء`:"🃏 بطاقات الأسماء جاهزة";
+    document.querySelectorAll(".name-cards-system .welcome-message, #nameSelectionAnimation .welcome-message").forEach((el)=>{
+      if(/بطاقة متاحة/.test(el.textContent||"")){
+        const available=document.querySelector('[data-stat="available"] .stat-value')?.textContent?.trim()||total||"";
+        el.innerHTML=`<strong>🎴 بطاقات الطلاب جاهزة</strong><br>${available} طالبًا متاحًا<br><small>اضغط «اختيار بطاقة عشوائيًا» لبدء الجولة</small>`;
+      }
     });
     enhanceResultActions();
   }
