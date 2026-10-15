@@ -72,11 +72,13 @@
     }, true);
 
     const observer = new MutationObserver(() => {
-      syncExperience();
       if (importedMode && pack && waiting && isResultVisible()) window.setTimeout(renderQuestion, 80);
     });
-    observer.observe(document.body, { attributes:true, childList:true, subtree:true, characterData:true });
-    classSelect.addEventListener("change", () => window.setTimeout(syncExperience, 120));
+    observer.observe(result, { attributes:true, childList:true, subtree:true });
+    classSelect.addEventListener("change", () => {
+      window.setTimeout(syncExperience, 180);
+      window.setTimeout(syncExperience, 900);
+    });
     syncExperience();
 
     function renderQuestion() {
@@ -155,10 +157,13 @@
     if(selector)selector.classList.toggle("is-ready",!!hasClass);
     if(welcome){
       const lines=welcome.querySelectorAll("div,p,span");
-      if(hasClass){
+      if(hasClass&&!welcome.classList.contains("ready-message")){
         welcome.classList.add("ready-message");
         welcome.innerHTML='<strong>✓ البطاقات جاهزة</strong><small>ابدأ الاختيار العشوائي أو اختر بطاقة مباشرة من الطاولة</small>';
-      } else if(welcome.classList.contains("ready-message")) location.reload();
+      } else if(!hasClass&&welcome.classList.contains("ready-message")){
+        welcome.classList.remove("ready-message");
+        welcome.innerHTML='<strong>اختر الصف الدراسي</strong><small>ستظهر بطاقات الطلاب هنا بعد تحميل القائمة</small>';
+      }
     }
     const spin=document.getElementById("spinButton");
     if(spin&&!spin.disabled&&!spin.dataset.cleanLabel){spin.innerHTML='<span aria-hidden="true">🎴</span> اختيار بطاقة عشوائيًا';spin.dataset.cleanLabel="1";}
