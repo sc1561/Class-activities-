@@ -14,6 +14,7 @@
 
     document.body.classList.add("names-wheel-redesign");
     injectStyles();
+    if (result.parentElement !== document.body) document.body.appendChild(result);
     enhanceHeader();
     enhanceSetup(classSelect);
     enhanceResultActions();
