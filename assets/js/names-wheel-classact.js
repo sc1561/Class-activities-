@@ -122,7 +122,7 @@
       const box=selectedPair.querySelector(".can-question-box"); if(box)box.style.display="none";
       window.setTimeout(()=>nextRound.click(),220);
     }
-    function isResultVisible(){return getComputedStyle(result).display!=="none" && result.offsetParent!==null;}
+    function isResultVisible(){return getComputedStyle(result).display!=="none" && result.getClientRects().length>0;}
     function order(list,mode){const copy=list.slice();if(mode==="random")for(let i=copy.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[copy[i],copy[j]]=[copy[j],copy[i]];}return copy;}
   });
 
