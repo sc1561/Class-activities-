@@ -236,12 +236,15 @@
     const s = state.stats[team];
     s.correct++; s.answers++; s.points += points; s.totalTime += elapsed(seconds); if (stolen) s.steals++;
     closeQuestion(); sound("correct");
-    state.bypass = target;
+    // نعطّل اعتراض الحروف مؤقتًا حتى تصل النقرة الداخلية إلى منطق اللعبة الأصلي
+    // من دون أن تُعيد فتح نافذة السؤال مرة ثانية.
+    document.removeEventListener("click", intercept, true);
     target.click();
 
     const teamButtonId = team === "green" ? "selectGreenTeamBtn" : "selectRedTeamBtn";
     let attempts = 0;
     const finishAward = () => {
+      document.addEventListener("click", intercept, true);
       state.phase = "answer";
       state.activeTeam = TEAM[team].other;
       setTurn(state.activeTeam);
