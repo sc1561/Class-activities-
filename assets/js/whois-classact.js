@@ -110,3 +110,39 @@
     function reset() { gamePanel.classList.remove("active"); controls.style.display = ""; loader.style.display = ""; nativeGame.style.display = ""; }
   });
 })();
+
+
+// إصلاحات التكامل مع واجهة الأنشطة وعداد الإجابة الصحيحة
+(function () {
+  "use strict";
+
+  function mountNativeFixes() {
+    const topBack = document.querySelector('a[href="../index.html"]');
+    if (topBack) {
+      topBack.href = "../main.html";
+      topBack.title = "العودة إلى صفحة الأنشطة";
+      topBack.setAttribute("aria-label", "العودة إلى صفحة الأنشطة");
+    }
+
+    document.addEventListener("click", (event) => {
+      const card = event.target.closest && event.target.closest(".student-card");
+      if (!card || card.dataset.classactCorrectCounted === "1") return;
+
+      const target = document.querySelector("#gameArea .target-name");
+      const guessed = card.querySelector(".student-name");
+      if (!target || !guessed || target.textContent.trim() !== guessed.textContent.trim()) return;
+
+      card.dataset.classactCorrectCounted = "1";
+      window.setTimeout(() => {
+        const correctValue = document.querySelector("#gameArea .stat-card.correct .stat-value");
+        if (correctValue) correctValue.textContent = "1";
+      }, 60);
+    }, true);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", mountNativeFixes);
+  } else {
+    mountNativeFixes();
+  }
+})();
