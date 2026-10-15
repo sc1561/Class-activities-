@@ -49,6 +49,7 @@
   let correctCount = 0;
   let wrongCount = 0;
   let rollInProgress = false;
+  let confirmedPlayerNames = [];
 
   const ready = (fn) => document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", fn) : fn();
   ready(init);
@@ -154,7 +155,16 @@
     guide.querySelector(".cam-guide-start").onclick = () => { closeGuide(); panel.scrollIntoView({behavior:"smooth",block:"center"}); };
     guide.addEventListener("click", (event) => { if (event.target === guide) closeGuide(); });
 
-    if (startButton) startButton.addEventListener("click", () => window.setTimeout(refreshGuide, 350));
+    const confirmPlayersButton = document.getElementById("confirmPlayerSelection");
+    if (confirmPlayersButton) confirmPlayersButton.addEventListener("click", () => {
+      confirmedPlayerNames = [...document.querySelectorAll("#studentsInteractiveGrid .student-card.selected h4")]
+        .map((node) => node.textContent.trim()).filter(Boolean);
+      window.setTimeout(syncConfirmedPlayerNames, 80);
+    });
+    if (startButton) startButton.addEventListener("click", () => {
+      syncConfirmedPlayerNames();
+      window.setTimeout(() => { syncConfirmedPlayerNames(); refreshGuide(); }, 350);
+    });
 
     classSelect.addEventListener("change", refreshGuide);
     playersCountInput?.addEventListener("change", refreshGuide);
@@ -191,6 +201,16 @@
     status.textContent = `جاهز: ${BUILTIN_QUESTIONS.length} سؤالًا مدمجًا`;
     refreshGuide();
     refreshTurnHud();
+
+    function syncConfirmedPlayerNames(){
+      if (!confirmedPlayerNames.length) return;
+      try {
+        if (typeof gameState !== "undefined" && Array.isArray(gameState.players)) {
+          gameState.players.forEach((player, i) => { if (confirmedPlayerNames[i]) player.name = confirmedPlayerNames[i]; });
+          if (typeof updatePlayersDisplay === "function") updatePlayersDisplay();
+        }
+      } catch (error) { console.warn("تعذر مزامنة أسماء لاعبي مونوبولي", error); }
+    }
 
     function openGuide(){ guide.querySelector(".cam-guide-recommend").textContent = recommendationText(); guide.classList.add("active"); }
     function closeGuide(){ guide.classList.remove("active"); }
