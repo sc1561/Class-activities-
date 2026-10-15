@@ -170,8 +170,9 @@
     if(spin&&!spin.disabled&&!spin.dataset.cleanLabel){spin.innerHTML='<span aria-hidden="true">🎴</span> اختيار بطاقة عشوائيًا';spin.dataset.cleanLabel="1";}
     const total=document.querySelector('[data-stat="total"] .stat-value')?.textContent?.trim();
     document.querySelectorAll(".name-cards-system .welcome-message, #nameSelectionAnimation .welcome-message").forEach((el)=>{
-      if(/بطاقة متاحة/.test(el.textContent||"")){
-        const available=document.querySelector('[data-stat="available"] .stat-value')?.textContent?.trim()||total||"";
+      if(/بطاقة متاحة|بطاقات الطلاب جاهزة/.test(el.textContent||"")){
+        const cardCount=document.querySelectorAll("#nameCardsGrid .name-card").length;
+        const available=cardCount||document.querySelector('[data-stat="available"] .stat-value')?.textContent?.trim()||total||"";
         el.innerHTML=`<strong>🎴 بطاقات الطلاب جاهزة</strong><br>${available} طالبًا متاحًا<br><small>اضغط «اختيار بطاقة عشوائيًا» لبدء الجولة</small>`;
       }
     });
