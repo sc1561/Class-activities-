@@ -34,7 +34,7 @@ random:{name:"الاسم العشوائي",count:20,note:"أسئلة قصيرة 
 "knowledge-chains":{name:"تحدي سلاسل المعرفة",count:24,note:"أسئلة تساعد على بناء سلاسل صحيحة متدرجة"},
 "knowledge-race":{name:"سباق المعرفة",count:30,note:"أسئلة سريعة ومتدرجة ومتوازنة بين الفرق"},
 blockbusters:{name:"مسابقة الحروف",count:25,note:"سؤال واحد على الأقل لكل حرف في اللوحة، مع إجابة مرتبطة بالحرف المحدد",letters:true},
-"bomb-timer":{name:"القنبلة المؤقتة",count:25,note:"أسئلة قصيرة يمكن الإجابة عنها بسرعة"},
+"bomb-timer":{name:"القنبلة المؤقتة",count:20,note:"أسئلة اختيار من متعدد سريعة بثلاثة خيارات داخل صناديق المهمة",bombQuiz:true},
 kingdoms:{name:"مملكة التحديات",count:30,note:"أسئلة موزعة على مراحل من السهل إلى النهائي"},
 "team-challenge":{name:"تحدي الفرق",count:24,note:"أسئلة متوازنة بين الفرق ومستويات الصعوبة"},
 "create-story":{name:"كوّن قصة",count:15,note:"محفزات وأسئلة إبداعية لبناء قصة"},
@@ -48,10 +48,10 @@ whois:{name:"من هو؟",count:15,note:"تلميحات متدرجة من الغ
 "quraa-challenge":{name:"قرعة التحدي الذكية",count:24,note:"أسئلة اختيار من متعدد واضحة بأربعة خيارات، مناسبة للقرعة الفردية والتنافس والنقاط",quiz:true},
 timer:{name:"المؤقت التفاعلي",none:true},quraa:{name:"قرعة الأسماء الذكية",none:true}
 };
-function emptyPack(type){const g=activityGuides[type],meta={title:"",subject:"",grade:"",lesson:"",createdAt:""};if(g.axis){const categories=Array.from({length:5},(_,i)=>"المحور "+(i+1)),questions=[];[100,200,300].forEach(p=>categories.forEach((_,c)=>questions.push({c,p,q:"",o:["","","",""],a:0,e:""})));return{format:"classact-axis",version:"1.0",activityType:type,metadata:meta,categories,questions}}if(g.letters){const letters=["أ","ب","ت","ث","ج","ح","خ","د","ذ","ر","ز","س","ش","ص","ض","ط","ظ","ع","غ","ف","ق","ك","ل","م","ن"];return{format:"classact",version:"1.0",activityType:type,metadata:meta,settings:{questionOrder:"by-letter",defaultTime:30,allowHints:true,allowSteal:true},questions:letters.map((letter,i)=>({id:"q"+(i+1),letter,question:"",answer:"",alternativeAnswers:[],hint:"",difficulty:i<9?"easy":i<18?"medium":"hard",points:100,time:30}))}}if(g.quiz)return{format:"classact",version:"1.0",activityType:type,metadata:meta,settings:{questionOrder:"sequential",defaultTime:30,allowHints:true,repeatWrongQuestions:true},questions:Array.from({length:g.count},(_,i)=>({id:"q"+(i+1),question:"",answer:"",alternativeAnswers:["","",""],hint:"",explanation:"",difficulty:i<8?"easy":i<17?"medium":"hard",points:i<8?100:i<17?200:300,time:30}))};return{format:"classact",version:"1.0",activityType:type,metadata:meta,settings:{questionOrder:"sequential",defaultTime:30,allowHints:true,repeatWrongQuestions:true},questions:Array.from({length:g.count},(_,i)=>({id:"q"+(i+1),question:"",answer:"",alternativeAnswers:[],hint:"",difficulty:i<Math.ceil(g.count*.35)?"easy":i<Math.ceil(g.count*.75)?"medium":"hard",points:10,time:30}))}}
+function emptyPack(type){const g=activityGuides[type],meta={title:"",subject:"",grade:"",lesson:"",createdAt:""};if(g.axis){const categories=Array.from({length:5},(_,i)=>"المحور "+(i+1)),questions=[];[100,200,300].forEach(p=>categories.forEach((_,c)=>questions.push({c,p,q:"",o:["","","",""],a:0,e:""})));return{format:"classact-axis",version:"1.0",activityType:type,metadata:meta,categories,questions}}if(g.letters){const letters=["أ","ب","ت","ث","ج","ح","خ","د","ذ","ر","ز","س","ش","ص","ض","ط","ظ","ع","غ","ف","ق","ك","ل","م","ن"];return{format:"classact",version:"1.0",activityType:type,metadata:meta,settings:{questionOrder:"by-letter",defaultTime:30,allowHints:true,allowSteal:true},questions:letters.map((letter,i)=>({id:"q"+(i+1),letter,question:"",answer:"",alternativeAnswers:[],hint:"",difficulty:i<9?"easy":i<18?"medium":"hard",points:100,time:30}))}}if(g.bombQuiz)return{format:"classact",version:"1.0",activityType:type,metadata:meta,settings:{questionOrder:"random",defaultTime:30,allowHints:true,repeatWrongQuestions:true},questions:Array.from({length:g.count},(_,i)=>({id:"q"+(i+1),question:"",answer:"",alternativeAnswers:["",""],hint:"",explanation:"",difficulty:i<7?"easy":i<14?"medium":"hard",points:i<7?100:i<14?200:300,time:30}))};if(g.quiz)return{format:"classact",version:"1.0",activityType:type,metadata:meta,settings:{questionOrder:"sequential",defaultTime:30,allowHints:true,repeatWrongQuestions:true},questions:Array.from({length:g.count},(_,i)=>({id:"q"+(i+1),question:"",answer:"",alternativeAnswers:["","",""],hint:"",explanation:"",difficulty:i<8?"easy":i<17?"medium":"hard",points:i<8?100:i<17?200:300,time:30}))};return{format:"classact",version:"1.0",activityType:type,metadata:meta,settings:{questionOrder:"sequential",defaultTime:30,allowHints:true,repeatWrongQuestions:true},questions:Array.from({length:g.count},(_,i)=>({id:"q"+(i+1),question:"",answer:"",alternativeAnswers:[],hint:"",difficulty:i<Math.ceil(g.count*.35)?"easy":i<Math.ceil(g.count*.75)?"medium":"hard",points:10,time:30}))}}
 function saveJson(obj,name){const url=URL.createObjectURL(new Blob([JSON.stringify(obj,null,2)],{type:"application/json;charset=utf-8"})),a=document.createElement("a");a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
 function downloadEmpty(type){const g=activityGuides[type];if(!g||g.none)return;saveJson(emptyPack(type),`قالب-فارغ-${safeName(g.name)}.classact`);show(`تم تنزيل القالب الفارغ لنشاط ${g.name}.`,"success")}
-function buildPrompt(type){const g=activityGuides[type],axis=g.axis?`
+function buildPrompt(type){const g=activityGuides[type],bombQuiz=g.bombQuiz?`\nتعليمات إلزامية للقنبلة المؤقتة:\n- أنشئ ثلاثة خيارات فقط لكل سؤال: الإجابة الصحيحة في answer ومشتتان منطقيان فقط في alternativeAnswers.\n- يجب أن تحتوي alternativeAnswers على عنصرين بالضبط، ولا تكرر الإجابة الصحيحة بينهما.\n- اجعل السؤال قصيرًا ومناسبًا للإجابة خلال 30 ثانية.\n- املأ explanation بتفسير تعليمي مختصر يظهر بعد الاختيار.\n- استخدم النقاط 100 أو 200 أو 300 حسب الصعوبة، والوقت بين 20 و60 ثانية.`:"",axis=g.axis?`
 هذا النشاط يعمل بلوحة محاور. استخدم عددًا صحيحًا من المحاور والمستويات، والأفضل 5 محاور × 3 مستويات = 15 سؤالًا. حافظ على الحقول categories وc وp وq وo وa وe. قيمة a هي رقم الإجابة الصحيحة من 0 إلى 3، وقيم النقاط الافتراضية 100 و200 و300.`:"",quiz=g.quiz?`\nهذا النشاط يتطلب أربعة خيارات لكل سؤال: ضع الإجابة الصحيحة في answer وثلاثة خيارات خاطئة منطقية في alternativeAnswers. لا تكرر الإجابة الصحيحة داخل البدائل. املأ hint وexplanation، واستخدم difficulty بالقيم easy أو medium أو hard، والنقاط 100 أو 200 أو 300.`:"",letters=g.letters?`\nتعليمات إلزامية لمسابقة الحروف:\n- لا تغيّر قيمة الحقل letter في أي سؤال.\n- أنشئ سؤالًا واحدًا على الأقل لكل حرف موجود في القالب وعددها 25 حرفًا.\n- يجب أن تبدأ الإجابة الصحيحة بالحرف المحدد في letter، ويجوز تجاهل أل التعريف عند فحص بداية الإجابة.\n- لا تضع سؤالًا لا تتوافق إجابته مع حرفه.\n- اجعل النقاط 100 والوقت 30 ثانية، وأضف تلميحًا قصيرًا مفيدًا.`:"";
 return `أنت خبير تربوي ومتخصص في إعداد ملفات أنشطة صفية عربية.
 
@@ -66,7 +66,7 @@ return `أنت خبير تربوي ومتخصص في إعداد ملفات أن�
 - نوّع المستويات إلى سهل ومتوسط ومتقدم، وتجنب التكرار.
 - اجعل السؤال واضحًا ومباشرًا وخاليًا من اللبس.
 - اكتب إجابة صحيحة دقيقة، وتحقق منها من المصدر.
-- عند وجود خيارات، اجعل هناك إجابة صحيحة واحدة فقط وثلاثة مشتتات منطقية.
+- عند وجود خيارات، اجعل هناك إجابة صحيحة واحدة فقط، واستخدم عدد المشتتات المحدد في القالب دون زيادته.
 - أضف تلميحًا مفيدًا وتفسيرًا موجزًا متى سمح القالب بذلك.
 - حافظ حرفيًا على بنية JSON وأسماء الحقول ونوع البيانات في القالب.
 - لا تحذف format أو version أو activityType أو metadata أو settings.
@@ -74,7 +74,7 @@ return `أنت خبير تربوي ومتخصص في إعداد ملفات أن�
 - لا تضف أسماء الطلاب أو أي بيانات شخصية.
 - استخدم العربية السليمة وترميز UTF-8.
 - افحص JSON نهائيًا: لا تعليقات، لا فواصل زائدة، لا Markdown، ولا نص خارج JSON.
-${axis}${quiz}${letters}
+${axis}${bombQuiz}${quiz}${letters}
 أسلوب الأسئلة المناسب لهذا النشاط: ${g.note}.
 
 المخرج النهائي:
