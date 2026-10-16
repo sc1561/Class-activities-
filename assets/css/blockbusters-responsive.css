@@ -1,0 +1,7 @@
+/* Keep game controls usable without shrinking the letter board. */
+@media (max-width: 768px) {
+  .control-buttons .control-group { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+  .control-buttons .control-btn { min-width: 44px; min-height: 44px; }
+  .classact-b-modes, .classact-b-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  .classact-b-mode { min-width: 0; flex: 1 1 140px; }
+}
