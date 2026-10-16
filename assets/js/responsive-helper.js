@@ -83,13 +83,16 @@ class ResponsiveHelper {
     }
     
     handleOrientationChange() {
-        this.orientation = this.getOrientation();
-        this.onOrientationChange(this.orientation);
+        const orientation = this.getOrientation();
+        if (orientation !== this.orientation) {
+            this.orientation = orientation;
+            this.onOrientationChange(orientation);
+        }
         this.adjustModalSizes();
     }
     
     onDeviceChange(device) {
-        document.body.className = document.body.className.replace(/device-\w+/g, '');
+        [...document.body.classList].filter(name => name.startsWith('device-')).forEach(name => document.body.classList.remove(name));
         document.body.classList.add(`device-${device}`);
         
         // Emit custom event
@@ -99,11 +102,11 @@ class ResponsiveHelper {
     }
     
     onOrientationChange(orientation) {
-        document.body.className = document.body.className.replace(/orientation-\w+/g, '');
+        [...document.body.classList].filter(name => name.startsWith('orientation-')).forEach(name => document.body.classList.remove(name));
         document.body.classList.add(`orientation-${orientation}`);
         
         // Emit custom event
-        window.dispatchEvent(new CustomEvent('orientationchange', {
+        window.dispatchEvent(new CustomEvent('responsiveorientationchange', {
             detail: { orientation, helper: this }
         }));
     }
@@ -153,18 +156,18 @@ class ResponsiveHelper {
     }
     
     makeTableResponsive(table) {
-        if (this.isMobile()) {
-            // Convert table to card layout on mobile
-            const wrapper = document.createElement('div');
-            wrapper.className = 'table-responsive-wrapper';
-            table.parentNode.insertBefore(wrapper, table);
-            wrapper.appendChild(table);
-            
-            table.style.fontSize = '0.85rem';
-            table.style.width = '100%';
-        }
+        if (!this.isMobile() || table.parentElement.classList.contains('table-responsive-wrapper')) return;
+        const wrapper = document.createElement('div');
+        wrapper.className = 'table-responsive-wrapper';
+        wrapper.style.maxWidth = '100%';
+        wrapper.style.overflowX = 'auto';
+        wrapper.setAttribute('tabindex', '0');
+        wrapper.setAttribute('role', 'region');
+        wrapper.setAttribute('aria-label', 'جدول قابل للتمرير أفقيًا');
+        table.parentNode.insertBefore(wrapper, table);
+        wrapper.appendChild(table);
     }
-    
+
     setupResponsiveImages() {
         const images = document.querySelectorAll('img:not(.responsive-handled)');
         
@@ -208,27 +211,9 @@ class ResponsiveHelper {
     }
     
     adjustTableLayout() {
-        const tables = document.querySelectorAll('table');
-        
-        tables.forEach(table => {
-            if (this.isMobile()) {
-                table.style.fontSize = '0.8rem';
-                
-                // Hide less important columns on mobile
-                const cells = table.querySelectorAll('th:nth-child(n+4), td:nth-child(n+4)');
-                cells.forEach(cell => {
-                    cell.style.display = 'none';
-                });
-            } else {
-                table.style.fontSize = '';
-                const cells = table.querySelectorAll('th, td');
-                cells.forEach(cell => {
-                    cell.style.display = '';
-                });
-            }
-        });
+        document.querySelectorAll('table').forEach(table => this.makeTableResponsive(table));
     }
-    
+
     // Utility function to create responsive grid
     createResponsiveGrid(container, items, options = {}) {
         const defaults = {
@@ -323,11 +308,4 @@ document.addEventListener('DOMContentLoaded', () => {
 // Export for use in other scripts
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = ResponsiveHelper;
-}
-
-// Load the dedicated imported-question adapter only on Blockbusters.
-if (/\/activities\/Blockbusters\.html$/i.test(window.location.pathname)) {
-    const adapter = document.createElement('script');
-    adapter.src = '../assets/js/blockbusters-classact.js';
-    document.head.appendChild(adapter);
 }
