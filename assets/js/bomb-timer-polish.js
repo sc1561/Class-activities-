@@ -43,6 +43,8 @@
     body{background:radial-gradient(circle at 52% 28%,rgba(249,115,22,.12),transparent 30%),linear-gradient(145deg,#090f1d,#151829 55%,#0b1220)!important}
     .top-toolbar{background:rgba(9,15,29,.94)!important;border-bottom:1px solid rgba(251,191,36,.3)!important;box-shadow:0 10px 30px rgba(0,0,0,.28)!important;backdrop-filter:blur(12px)}
     .toolbar-btn{border:1px solid rgba(251,191,36,.25)!important;background:rgba(255,255,255,.055)!important;box-shadow:none!important}.toolbar-btn:hover{background:var(--bomb-gold)!important;color:#111827!important;transform:translateY(-2px)}
+    #homeBtn.bomb-back-btn{width:auto!important;min-width:132px!important;padding:.55rem .9rem!important;gap:.45rem!important;border-color:rgba(34,211,238,.42)!important;color:#ecfeff!important;font-family:inherit!important;font-size:.88rem!important;font-weight:900!important;white-space:nowrap}
+    #homeBtn.bomb-back-btn:hover{background:linear-gradient(135deg,#0891b2,#0e7490)!important;color:#fff!important;border-color:#67e8f9!important}
     .header{padding:2rem 1rem 1.5rem!important;background:linear-gradient(135deg,rgba(17,24,39,.94),rgba(31,41,55,.92))!important;border-bottom:1px solid rgba(251,191,36,.18)}
     .header-title{font-size:clamp(1.9rem,5vw,3.25rem)!important;background:linear-gradient(90deg,#fff7cc,#fbbf24,#fb923c)!important;background-clip:text!important;-webkit-background-clip:text!important;-webkit-text-fill-color:transparent;text-shadow:none!important}
     .header-subtitle{max-width:900px;margin:.65rem auto 0!important;color:#e5e7eb!important;line-height:1.9!important;font-size:clamp(.92rem,2vw,1.12rem)!important}
@@ -63,7 +65,7 @@
     #defuseBtn{background:linear-gradient(135deg,#22c55e,#15803d)!important;color:#fff!important;box-shadow:0 10px 24px rgba(34,197,94,.23)!important}#activateBombBtn{background:linear-gradient(135deg,#fb7185,#be123c)!important;box-shadow:0 10px 24px rgba(190,18,60,.23)!important}
     .bomb-audio-badge{position:fixed;top:5.2rem;left:1rem;z-index:1200;padding:.5rem .8rem;border-radius:999px;background:#fff7d6;color:#854d0e;border:1px solid #fde68a;font-size:.78rem;font-weight:900;box-shadow:0 8px 22px rgba(0,0,0,.2)}.bomb-audio-ready .bomb-audio-badge{background:#dcfce7;color:#166534;border-color:#86efac}
     .bomb-quick-guide{display:grid;grid-template-columns:repeat(4,1fr);gap:.55rem;margin:.8rem 0 1rem}.bomb-quick-guide div{padding:.65rem;border-radius:13px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.18);color:#e5e7eb;text-align:center;font-weight:800;font-size:.78rem}
-    @media(max-width:850px){.bomb-mode-guide{grid-template-columns:1fr}.bomb-quick-guide{grid-template-columns:1fr 1fr}.classact-bomb-modes{grid-template-columns:1fr!important}.bomb-audio-badge{top:4.6rem;left:.5rem}.main-content{padding:.75rem!important}.teacher-controls,.bomb-area{border-radius:19px!important}}
+    @media(max-width:850px){.bomb-mode-guide{grid-template-columns:1fr}.bomb-quick-guide{grid-template-columns:1fr 1fr}.classact-bomb-modes{grid-template-columns:1fr!important}.bomb-audio-badge{top:4.6rem;left:.5rem}.main-content{padding:.75rem!important}.teacher-controls,.bomb-area{border-radius:19px!important}#homeBtn.bomb-back-btn{min-width:52px!important;padding:.55rem!important}#homeBtn .bomb-back-label{display:none}}
     @media(max-width:480px){.bomb-quick-guide{grid-template-columns:1fr}.header{padding-top:1.2rem!important}.info-card{padding:.75rem!important}}
     @media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important;transition:none!important}}
   `;
@@ -138,6 +140,19 @@
     }
 
     document.getElementById('soundBtn')?.setAttribute('aria-label', 'كتم أو تشغيل مؤثرات القنبلة');
+
+    const homeButton = document.getElementById('homeBtn');
+    if (homeButton) {
+      homeButton.classList.add('bomb-back-btn');
+      homeButton.innerHTML = '<span aria-hidden="true">🔙</span><span class="bomb-back-label">العودة للأنشطة</span>';
+      homeButton.title = 'العودة إلى صفحة الأنشطة';
+      homeButton.setAttribute('aria-label', 'العودة إلى صفحة الأنشطة');
+      homeButton.addEventListener('click', function (event) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        window.location.href = '../main.html';
+      }, true);
+    }
   }
 
   document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', mountEnhancements) : mountEnhancements();
