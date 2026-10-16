@@ -1,148 +1,50 @@
-(function () {
-  "use strict";
-
-  const EXPECTED_TYPE = "whois";
-  let pack = null;
-  let questions = [];
-  let wrongQuestions = [];
-  let index = 0;
-  let importedMode = false;
-
-  const ready = (callback) => document.readyState === "loading"
-    ? document.addEventListener("DOMContentLoaded", callback)
-    : callback();
-
-  ready(() => {
-    const startButton = document.getElementById("startGameBtn");
-    const nativeGame = document.getElementById("gameArea");
-    if (!startButton || !nativeGame) return;
-    let nativeStartDisabled = startButton.disabled;
-
-    const controls = startButton.closest(".controls") || startButton.parentElement;
-    const loader = document.createElement("section");
-    loader.id = "classactWhoisLoader";
-    loader.dir = "rtl";
-    loader.innerHTML = `
-      <style>
-        #classactWhoisLoader,.classact-whois-game{background:rgba(255,255,255,.94);border-radius:22px;padding:22px;margin:0 0 24px;box-shadow:0 12px 35px rgba(31,41,55,.16);font-family:Cairo,sans-serif}
-        .classact-mode-row,.classact-actions{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
-        .classact-mode{border:2px solid #667eea;background:#fff;color:#4c51bf;padding:12px 20px;border-radius:14px;font-weight:700;cursor:pointer}
-        .classact-mode.active{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff}
-        .classact-import{display:none;margin-top:18px;text-align:center}.classact-import.active{display:block}
-        .classact-file{display:block;margin:14px auto;max-width:430px;width:100%}
-        .classact-status{min-height:27px;font-weight:700;color:#4c51bf}
-        .classact-whois-game{display:none;text-align:center}.classact-whois-game.active{display:block}
-        .classact-counter{color:#667eea;font-weight:800}.classact-clue{font-size:clamp(1.35rem,3vw,2.2rem);font-weight:800;margin:22px 0;line-height:1.7}
-        .classact-hint,.classact-answer{display:none;margin:14px auto;padding:15px;border-radius:14px;max-width:760px}.classact-hint.show{display:block;background:#fff7d6}.classact-answer.show{display:block;background:#dcfce7;font-size:1.45rem;font-weight:800}
-        .classact-actions button{padding:12px 18px;border:0;border-radius:13px;color:#fff;font-family:Cairo,sans-serif;font-weight:800;cursor:pointer}.ca-hint{background:#f59e0b}.ca-reveal{background:#6366f1}.ca-correct{background:#16a34a}.ca-wrong{background:#dc2626}.ca-exit{background:#64748b}
-      </style>
-      <h3>طريقة اللعب</h3>
-      <div class="classact-mode-row">
-        <button type="button" class="classact-mode active" data-mode="native">تخمين الطلاب</button>
-        <button type="button" class="classact-mode" data-mode="imported">تخمين معرفي</button>
-      </div>
-      <div class="classact-import">
-        <p>استورد ملف النشاط؛ سيظهر السؤال كتلميح وتبقى الإجابة مخفية حتى كشفها.</p>
-        <input class="classact-file" type="file" accept=".classact,application/json">
-        <div class="classact-status" role="status"></div>
-      </div>`;
-    controls.parentNode.insertBefore(loader, controls);
-
-    const gamePanel = document.createElement("section");
-    gamePanel.className = "classact-whois-game";
-    gamePanel.innerHTML = `
-      <div class="classact-counter"></div><div class="classact-clue"></div>
-      <div class="classact-hint"></div><div class="classact-answer"></div>
-      <div class="classact-actions">
-        <button type="button" class="ca-hint">عرض التلميح</button><button type="button" class="ca-reveal">كشف الإجابة</button>
-        <button type="button" class="ca-correct">إجابة صحيحة</button><button type="button" class="ca-wrong">إجابة خاطئة</button><button type="button" class="ca-exit">العودة للإعداد</button>
-      </div>`;
-    nativeGame.parentNode.insertBefore(gamePanel, nativeGame);
-
-    const importBox = loader.querySelector(".classact-import");
-    const status = loader.querySelector(".classact-status");
-    loader.querySelectorAll(".classact-mode").forEach((button) => button.addEventListener("click", () => {
-      if (!importedMode) nativeStartDisabled = startButton.disabled;
-      importedMode = button.dataset.mode === "imported";
-      loader.querySelectorAll(".classact-mode").forEach((item) => item.classList.toggle("active", item === button));
-      importBox.classList.toggle("active", importedMode);
-      startButton.disabled = importedMode ? false : nativeStartDisabled;
-    }));
-
-    loader.querySelector(".classact-file").addEventListener("change", async (event) => {
-      try {
-        const file = event.target.files[0];
-        if (!file) return;
-        const data = JSON.parse(await file.text());
-        if (data.format !== "classact" || data.version !== "1.0" || data.activityType !== EXPECTED_TYPE) throw new Error("هذا الملف ليس مخصصًا لنشاط من هو؟");
-        const valid = Array.isArray(data.questions) ? data.questions.filter((q) => q && String(q.question || "").trim() && String(q.answer || "").trim()) : [];
-        if (!valid.length) throw new Error("لا توجد أسئلة صالحة في الملف");
-        pack = data; questions = valid; status.textContent = `تم استيراد ${valid.length} سؤالًا بنجاح`;
-      } catch (error) { pack = null; questions = []; status.textContent = error.message || "تعذر قراءة الملف"; }
-    });
-
-    startButton.addEventListener("click", (event) => {
-      if (!importedMode) return;
-      event.preventDefault(); event.stopImmediatePropagation();
-      if (!pack || !questions.length) { status.textContent = "استورد ملف من هو؟ أولًا"; return; }
-      index = 0; wrongQuestions = []; controls.style.display = "none"; loader.style.display = "none"; nativeGame.style.display = "none"; gamePanel.classList.add("active"); render();
-    }, true);
-
-    gamePanel.querySelector(".ca-hint").onclick = () => gamePanel.querySelector(".classact-hint").classList.add("show");
-    gamePanel.querySelector(".ca-reveal").onclick = () => gamePanel.querySelector(".classact-answer").classList.add("show");
-    gamePanel.querySelector(".ca-correct").onclick = () => advance(false);
-    gamePanel.querySelector(".ca-wrong").onclick = () => advance(true);
-    gamePanel.querySelector(".ca-exit").onclick = reset;
-
-    function render() {
-      if (index >= questions.length) {
-        const repeatWrong = pack.settings && pack.settings.repeatWrong !== false;
-        if (repeatWrong && wrongQuestions.length) { questions = wrongQuestions.slice(); wrongQuestions = []; index = 0; }
-        else { gamePanel.querySelector(".classact-counter").textContent = "اكتمل النشاط"; gamePanel.querySelector(".classact-clue").textContent = "أحسنتم! انتهت جميع الأسئلة."; gamePanel.querySelector(".classact-hint").className = "classact-hint"; gamePanel.querySelector(".classact-answer").className = "classact-answer"; return; }
-      }
-      const item = questions[index];
-      gamePanel.querySelector(".classact-counter").textContent = `السؤال ${index + 1} من ${questions.length}`;
-      gamePanel.querySelector(".classact-clue").textContent = item.question;
-      const hint = gamePanel.querySelector(".classact-hint"); hint.textContent = item.hint ? `تلميح إضافي: ${item.hint}` : "لا يوجد تلميح إضافي"; hint.className = "classact-hint";
-      const answer = gamePanel.querySelector(".classact-answer"); answer.textContent = `الإجابة: ${item.answer}`; answer.className = "classact-answer";
-    }
-    function advance(wrong) { if (index >= questions.length) return; if (wrong) wrongQuestions.push(questions[index]); index += 1; render(); }
-    function reset() { gamePanel.classList.remove("active"); controls.style.display = ""; loader.style.display = ""; nativeGame.style.display = ""; }
-  });
-})();
-
-
-// إصلاحات التكامل مع واجهة الأنشطة وعداد الإجابة الصحيحة
-(function () {
-  "use strict";
-
-  function mountNativeFixes() {
-    const topBack = document.querySelector('a[href="../index.html"]');
-    if (topBack) {
-      topBack.href = "../main.html";
-      topBack.title = "العودة إلى صفحة الأنشطة";
-      topBack.setAttribute("aria-label", "العودة إلى صفحة الأنشطة");
-    }
-
-    document.addEventListener("click", (event) => {
-      const card = event.target.closest && event.target.closest(".student-card");
-      if (!card || card.dataset.classactCorrectCounted === "1") return;
-
-      const target = document.querySelector("#gameArea .target-name");
-      const guessed = card.querySelector(".student-name");
-      if (!target || !guessed || target.textContent.trim() !== guessed.textContent.trim()) return;
-
-      card.dataset.classactCorrectCounted = "1";
-      window.setTimeout(() => {
-        const correctValue = document.querySelector("#gameArea .stat-card.correct .stat-value");
-        if (correctValue) correctValue.textContent = "1";
-      }, 60);
-    }, true);
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", mountNativeFixes);
-  } else {
-    mountNativeFixes();
-  }
+(function(){
+"use strict";
+const TYPE="whois";
+const state={imported:false,pack:null,queue:[],wrong:[],index:0,clue:0,score:0,correct:0,streak:0,best:0,answered:false};
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const css=`
+#classactWhoisLoader,.mystery-game{background:rgba(255,255,255,.95);border:1px solid rgba(99,102,241,.24);border-radius:24px;padding:22px;margin:0 0 24px;box-shadow:0 18px 42px rgba(30,41,99,.18);font-family:Cairo,sans-serif}
+#classactWhoisLoader{position:relative;overflow:hidden}#classactWhoisLoader:before{content:"";position:absolute;width:180px;height:180px;border-radius:50%;background:rgba(99,102,241,.09);left:-70px;top:-90px}
+.mystery-title{position:relative;margin:0 0 6px;color:#312e81}.mystery-sub{position:relative;color:#64748b;margin-bottom:16px}.mystery-modes,.mystery-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}.mystery-mode{flex:1;min-width:190px;border:2px solid #818cf8;background:#fff;color:#4338ca;padding:12px 18px;border-radius:14px;font-weight:800;cursor:pointer;transition:.25s}.mystery-mode.active{color:#fff;border-color:transparent;background:linear-gradient(135deg,#4f46e5,#7c3aed);box-shadow:0 10px 24px rgba(79,70,229,.25);transform:translateY(-2px)}
+.mystery-guide{margin-top:14px;background:linear-gradient(135deg,#eef2ff,#ecfeff);border-radius:15px;padding:13px;line-height:1.8;color:#334155}.mystery-guide b{color:#3730a3}.mystery-import{display:none;margin-top:16px;text-align:center}.mystery-import.active{display:block;animation:mDrop .3s ease}.mystery-file{display:inline-flex;background:#4338ca;color:#fff;border-radius:12px;padding:12px 16px;font-weight:800;cursor:pointer}.mystery-file input{display:none}.mystery-status{min-height:28px;margin-top:9px;font-weight:700;color:#4f46e5}.mystery-status.error{color:#b91c1c}.mystery-status.ok{color:#166534}
+.mystery-game{display:none;text-align:center;background:radial-gradient(circle at 50% 0,rgba(139,92,246,.12),transparent 38%),#fff}.mystery-game.active{display:block;animation:mDrop .35s ease}@keyframes mDrop{from{opacity:0;transform:translateY(-9px)}to{opacity:1;transform:none}}
+.mystery-top{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:14px}.mystery-stat{background:#f8fafc;border:1px solid #e2e8f0;border-radius:13px;padding:9px}.mystery-stat b{display:block;font-size:1.25rem;color:#4338ca}.mystery-progress{height:9px;background:#e2e8f0;border-radius:99px;overflow:hidden;margin:10px 0 18px}.mystery-progress i{display:block;height:100%;width:0;background:linear-gradient(90deg,#06b6d4,#6366f1,#a855f7);transition:.45s}
+.mystery-dossier{position:relative;border:2px dashed #a5b4fc;border-radius:20px;padding:22px;background:linear-gradient(145deg,#fafafa,#eef2ff);overflow:hidden}.mystery-dossier:after{content:"سري";position:absolute;left:16px;top:12px;border:3px solid rgba(220,38,38,.25);color:rgba(220,38,38,.35);border-radius:7px;padding:2px 10px;font-size:1.3rem;font-weight:900;transform:rotate(-12deg)}.mystery-case{font-weight:900;color:#6366f1}.mystery-question{font-size:clamp(1.35rem,3vw,2.15rem);font-weight:900;line-height:1.7;color:#172554;margin:18px auto;max-width:850px}
+.mystery-ladder{display:grid;gap:9px;max-width:850px;margin:12px auto}.mystery-clue{position:relative;text-align:right;background:#fff;border:1px solid #c7d2fe;border-radius:13px;padding:12px 48px 12px 12px;opacity:.48;filter:blur(3px);transition:.35s}.mystery-clue:before{content:"🔒";position:absolute;right:13px}.mystery-clue.open{opacity:1;filter:none;box-shadow:0 8px 18px rgba(79,70,229,.1);animation:clueIn .4s ease}.mystery-clue.open:before{content:"🔎"}@keyframes clueIn{0%{transform:scale(.94)}70%{transform:scale(1.02)}100%{transform:none}}
+.mystery-points{display:inline-block;margin:12px 0;background:#fef3c7;color:#92400e;border-radius:999px;padding:7px 14px;font-weight:900}.mystery-answer{display:none;margin:15px auto;background:#dcfce7;color:#166534;border:2px solid #86efac;border-radius:15px;padding:16px;font-size:1.5rem;font-weight:900;max-width:760px}.mystery-answer.show{display:block;animation:answerPop .45s cubic-bezier(.2,.9,.3,1.4)}@keyframes answerPop{from{opacity:0;transform:scale(.7) rotate(-2deg)}to{opacity:1;transform:none}}
+.mystery-actions{margin-top:15px}.mystery-actions button{border:0;border-radius:13px;padding:12px 17px;color:#fff;font-family:Cairo,sans-serif;font-weight:900;cursor:pointer;transition:.2s}.mystery-actions button:hover{transform:translateY(-2px)}.m-clue-btn{background:#d97706}.m-reveal-btn{background:#6366f1}.m-correct-btn{background:#16a34a}.m-wrong-btn{background:#dc2626}.m-exit-btn{background:#64748b}.mystery-actions button:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.mystery-finish{padding:20px}.mystery-trophy{font-size:5rem;animation:trophy 1.3s ease-in-out infinite alternate}@keyframes trophy{to{transform:translateY(-8px) rotate(4deg)}}.mystery-final-score{font-size:2.2rem;font-weight:900;color:#4338ca}.mystery-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:18px auto;max-width:650px}.mystery-summary div{background:#f5f3ff;border-radius:13px;padding:12px}.mystery-summary b{display:block;font-size:1.4rem;color:#6d28d9}
+@media(max-width:650px){#classactWhoisLoader,.mystery-game{padding:15px;border-radius:18px}.mystery-top{grid-template-columns:repeat(2,1fr)}.mystery-summary{grid-template-columns:1fr}.mystery-actions button{flex:1;min-width:135px}.mystery-dossier{padding:17px 12px}.mystery-dossier:after{font-size:.9rem}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important}}
+`;
+function safePlay(name){try{if(window.soundSystem&&typeof window.soundSystem.playSound==="function")window.soundSystem.playSound(name)}catch(_){}}
+function confetti(){if(typeof window.confetti==="function")window.confetti({particleCount:120,spread:85,origin:{y:.65},colors:["#06b6d4","#6366f1","#f59e0b"]})}
+function valid(p){return !!(p&&p.format==="classact"&&p.version==="1.0"&&p.activityType===TYPE&&Array.isArray(p.questions)&&p.questions.length&&p.questions.every(q=>String(q.question||"").trim()&&String(q.answer||"").trim()))}
+function shuffle(a){a=[...a];for(let i=a.length-1;i;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function clues(q){const list=[String(q.question||"").trim(),...(Array.isArray(q.alternativeAnswers)?q.alternativeAnswers:[]).map(x=>String(x).trim()).filter(Boolean)];if(String(q.hint||"").trim())list.push(String(q.hint).trim());return list.slice(0,4)}
+function points(){return [100,70,45,25][Math.min(state.clue,3)]}
+function addStyle(){const s=document.createElement("style");s.textContent=css;document.head.append(s)}
+function mount(){
+ addStyle();const start=document.getElementById("startGameBtn"),native=document.getElementById("gameArea");if(!start||!native)return;let nativeDisabled=start.disabled;
+ const back=document.querySelector('a[href="../index.html"]');if(back){back.href="../main.html";back.title="العودة إلى صفحة الأنشطة";back.setAttribute("aria-label","العودة إلى صفحة الأنشطة")}
+ const controls=start.closest(".controls")||start.parentElement;
+ const loader=document.createElement("section");loader.id="classactWhoisLoader";loader.dir="rtl";loader.innerHTML=`<h2 class="mystery-title">🕵️ بوابة التحقيق: من هو؟</h2><div class="mystery-sub">اختر بين تخمين أسماء الطلاب أو حل ملفات غموض معرفية من الدرس.</div><div class="mystery-modes"><button class="mystery-mode active" data-mode="native">👥 من هو الطالب؟</button><button class="mystery-mode" data-mode="imported">🗂️ ملف غموض معرفي</button></div><div class="mystery-guide"><b>فكرة اللعب:</b> افتح الأدلة واحدًا بعد الآخر. تبدأ القضية بـ100 نقطة، وتنخفض النقاط كلما احتجتم إلى دليل إضافي. الإجابة الخاطئة تعود في جولة المراجعة.</div><div class="mystery-import"><label class="mystery-file">📂 استيراد ملف .classact<input type="file" accept=".classact,application/json"></label><div class="mystery-status">العدد المثالي: 10–15 ملف غموض، وكل ملف يضم 3–4 أدلة متدرجة.</div></div>`;
+ controls.parentNode.insertBefore(loader,controls);
+ const game=document.createElement("section");game.className="mystery-game";game.innerHTML=`<div class="mystery-top"><div class="mystery-stat">القضية<b class="m-index">1/1</b></div><div class="mystery-stat">النقاط<b class="m-score">0</b></div><div class="mystery-stat">السلسلة<b class="m-streak">0 🔥</b></div><div class="mystery-stat">قيمة القضية<b class="m-value">100</b></div></div><div class="mystery-progress"><i></i></div><div class="mystery-dossier"><div class="mystery-case">🗂️ ملف غموض معرفي</div><div class="mystery-question">افتح الدليل الأول للبدء</div><div class="mystery-ladder"></div><div class="mystery-points">🏅 متاح: 100 نقطة</div><div class="mystery-answer"></div></div><div class="mystery-actions"><button class="m-clue-btn">🔎 فتح الدليل التالي</button><button class="m-reveal-btn">👁️ كشف الهوية</button><button class="m-correct-btn">✅ تم الحل</button><button class="m-wrong-btn">🔁 تحتاج مراجعة</button><button class="m-exit-btn">↩️ الإعداد</button></div>`;native.parentNode.insertBefore(game,native);
+ const importBox=$(".mystery-import",loader),status=$(".mystery-status",loader);
+ $$(".mystery-mode",loader).forEach(btn=>btn.onclick=()=>{if(!state.imported)nativeDisabled=start.disabled;state.imported=btn.dataset.mode==="imported";$$('.mystery-mode',loader).forEach(x=>x.classList.toggle('active',x===btn));importBox.classList.toggle('active',state.imported);start.disabled=state.imported?false:nativeDisabled});
+ $("input",loader).onchange=async e=>{try{const f=e.target.files?.[0];if(!f)return;const p=JSON.parse(await f.text());if(!valid(p))throw new Error("هذا الملف ليس مخصصًا لنشاط من هو؟");state.pack=p;status.className="mystery-status ok";status.textContent=`✅ تم تحميل «${p.metadata?.title||f.name}» — ${p.questions.length} ملف غموض.`}catch(err){state.pack=null;status.className="mystery-status error";status.textContent=err.message||"تعذر قراءة الملف"}};
+ start.addEventListener("click",e=>{if(!state.imported)return;e.preventDefault();e.stopImmediatePropagation();if(!state.pack){status.className="mystery-status error";status.textContent="استورد قالب من هو؟ أولًا، أو اختر وضع تخمين الطلاب.";return}begin()},true);
+ $(".m-clue-btn",game).onclick=openClue;$(".m-reveal-btn",game).onclick=()=>{$(".mystery-answer",game).classList.add("show");state.answered=true;toggleJudge(true)};$(".m-correct-btn",game).onclick=()=>judge(true);$(".m-wrong-btn",game).onclick=()=>judge(false);$(".m-exit-btn",game).onclick=reset;
+ function begin(){state.queue=state.pack.settings?.questionOrder==="sequential"?[...state.pack.questions]:shuffle(state.pack.questions);state.wrong=[];state.index=0;state.score=0;state.correct=0;state.streak=0;state.best=0;controls.style.display="none";loader.style.display="none";native.style.display="none";game.classList.add("active");render()}
+ function render(){if(state.index>=state.queue.length){if(state.wrong.length){state.queue=shuffle(state.wrong);state.wrong=[];state.index=0;status.textContent="جولة مراجعة الملفات غير المحلولة"}else return finish()}state.clue=-1;state.answered=false;const q=state.queue[state.index],list=clues(q);$(".m-index",game).textContent=`${state.index+1}/${state.queue.length}`;$(".m-score",game).textContent=state.score;$(".m-streak",game).textContent=`${state.streak} 🔥`;$(".m-value",game).textContent=100;$(".mystery-progress i",game).style.width=`${state.index/state.queue.length*100}%`;$(".mystery-question",game).textContent="افتح الدليل الأول واكتشف الهوية";$(".mystery-ladder",game).innerHTML=list.map((_,i)=>`<div class="mystery-clue" data-i="${i}">الدليل ${i+1} مخفي</div>`).join("");list.forEach((v,i)=>$( `.mystery-clue[data-i="${i}"]`,game).dataset.text=v);const ans=$(".mystery-answer",game);ans.textContent=`الهوية: ${q.answer}`;ans.classList.remove("show");$(".m-clue-btn",game).disabled=false;$(".m-reveal-btn",game).disabled=true;toggleJudge(false);openClue()}
+ function openClue(){const items=$$(".mystery-clue",game);if(state.clue>=items.length-1)return;state.clue++;const item=items[state.clue];item.textContent=item.dataset.text;item.classList.add("open");$(".mystery-question",game).textContent=state.clue===0?item.dataset.text:"اجمع الأدلة وحدد الهوية";const val=points();$(".m-value",game).textContent=val;$(".mystery-points",game).textContent=`🏅 متاح: ${val} نقطة`;$(".m-reveal-btn",game).disabled=false;if(state.clue===items.length-1)$(".m-clue-btn",game).disabled=true;safePlay("click")}
+ function toggleJudge(on){$(".m-correct-btn",game).disabled=!on;$(".m-wrong-btn",game).disabled=!on}
+ function judge(ok){if(!state.answered)return;const q=state.queue[state.index];if(ok){state.score+=points();state.correct++;state.streak++;state.best=Math.max(state.best,state.streak);confetti();safePlay("success")}else{state.wrong.push(q);state.streak=0;safePlay("error")}state.index++;setTimeout(render,350)}
+ function finish(){game.innerHTML=`<div class="mystery-finish"><div class="mystery-trophy">🏆</div><h2>اكتملت ملفات الغموض!</h2><div class="mystery-final-score">${state.score} نقطة</div><div class="mystery-summary"><div>ملفات محلولة<b>${state.correct}</b></div><div>أفضل سلسلة<b>${state.best}</b></div><div>دقة التحقيق<b>${state.correct?Math.round(state.correct/(state.correct+state.wrong.length)*100):0}%</b></div></div><button class="mystery-mode active m-finish-back">العودة للإعداد</button></div>`;confetti();setTimeout(confetti,450);$(".m-finish-back",game).onclick=()=>location.reload()}
+ function reset(){game.classList.remove("active");controls.style.display="";loader.style.display="";native.style.display=""}
+ document.addEventListener("click",event=>{const card=event.target.closest?.(".student-card");if(!card||card.dataset.classactCorrectCounted==="1")return;const target=document.querySelector("#gameArea .target-name"),guessed=card.querySelector(".student-name");if(!target||!guessed||target.textContent.trim()!==guessed.textContent.trim())return;card.dataset.classactCorrectCounted="1";setTimeout(()=>{const v=document.querySelector("#gameArea .stat-card.correct .stat-value");if(v)v.textContent="1"},60)},true);
+}
+document.readyState==="loading"?document.addEventListener("DOMContentLoaded",mount):mount();
 })();
