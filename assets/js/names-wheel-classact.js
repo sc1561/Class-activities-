@@ -2,6 +2,7 @@
   "use strict";
   const TYPE = "names-wheel";
   let pack = null, questions = [], retry = [], index = 0, importedMode = false, waiting = false;
+  let score = 0, streak = 0, answered = 0;
   const ready = (fn) => document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", fn) : fn();
 
   ready(() => {
@@ -54,7 +55,7 @@
         if (data.format !== "classact" || data.version !== "1.0" || data.activityType !== TYPE) throw new Error("هذا الملف ليس مخصصًا لبطاقات الأسماء الذكية");
         const valid = Array.isArray(data.questions) ? data.questions.filter((q) => q && String(q.question || "").trim() && String(q.answer || "").trim()) : [];
         if (!valid.length) throw new Error("لا توجد أسئلة صالحة في الملف");
-        pack = data; questions = order(valid, data.settings?.questionOrder); retry = []; index = 0;
+        pack = data; questions = order(valid, data.settings?.questionOrder); retry = []; index = 0; score = 0; streak = 0; answered = 0;
         status.className = "can-status success";
         status.textContent = `✓ تم استيراد ${valid.length} سؤالًا — النشاط جاهز`;
       } catch (error) {
@@ -101,7 +102,7 @@
       let box = task.querySelector(".can-question-box");
       if (!box) {
         box = document.createElement("div"); box.className = "can-question-box";
-        box.innerHTML = `<div class="can-progress"></div><div class="can-question"></div><div class="can-hint"></div><div class="can-answer"></div><div class="can-actions"><button type="button" class="can-hint-btn">💡 تلميح</button><button type="button" class="can-answer-btn">👁 كشف الإجابة</button><button type="button" class="can-correct">✓ إجابة صحيحة</button><button type="button" class="can-wrong">↻ تحتاج مراجعة</button></div>`;
+        box.innerHTML = `<div class="can-scorebar"><span>⭐ النقاط <b class="can-score">0</b></span><span>🔥 المتتالية <b class="can-streak">0</b></span><span>✅ المجاب <b class="can-answered">0</b></span></div><div class="can-progress"></div><div class="can-question"></div><div class="can-options"></div><div class="can-feedback" role="status" aria-live="polite"></div><div class="can-hint"></div><div class="can-answer"></div><div class="can-actions"><button type="button" class="can-hint-btn">💡 تلميح</button><button type="button" class="can-answer-btn">👁 كشف الإجابة</button><button type="button" class="can-correct">✓ إجابة صحيحة</button><button type="button" class="can-wrong">↻ تحتاج مراجعة</button></div>`;
         task.appendChild(box);
         box.querySelector(".can-hint-btn").onclick=()=>box.querySelector(".can-hint").classList.add("show");
         box.querySelector(".can-answer-btn").onclick=()=>box.querySelector(".can-answer").classList.add("show");
@@ -113,14 +114,66 @@
       box.querySelector(".can-question").textContent = q.question;
       const hint = box.querySelector(".can-hint"); hint.textContent = q.hint ? `💡 ${q.hint}` : "لا يوجد تلميح إضافي"; hint.className = "can-hint";
       const answer = box.querySelector(".can-answer"); answer.textContent = `✓ الإجابة: ${q.answer}`; answer.className = "can-answer";
+      box.querySelector(".can-score").textContent = score;
+      box.querySelector(".can-streak").textContent = streak;
+      box.querySelector(".can-answered").textContent = answered;
+      const feedback = box.querySelector(".can-feedback"); feedback.textContent = ""; feedback.className = "can-feedback";
+      const options = box.querySelector(".can-options");
+      const rawAlternatives = Array.isArray(q.alternatives) ? q.alternatives : String(q.alternatives || "").split("|");
+      const choices = [...new Set([q.answer, ...rawAlternatives].map((item) => String(item || "").trim()).filter(Boolean))];
+      options.innerHTML = "";
+      const hasChoices = choices.length >= 2;
+      box.classList.toggle("has-options", hasChoices);
+      box.querySelector(".can-correct").style.display = hasChoices ? "none" : "";
+      box.querySelector(".can-wrong").style.display = hasChoices ? "none" : "";
+      if (hasChoices) {
+        order(choices, "random").forEach((choice, choiceIndex) => {
+          const button = document.createElement("button");
+          button.type = "button"; button.className = `can-option option-${choiceIndex % 4}`; button.textContent = choice;
+          button.onclick = () => gradeChoice(button, choice, q, box);
+          options.appendChild(button);
+        });
+      }
       box.style.display = "block"; waiting = false;
+    }
+
+    function gradeChoice(button, choice, q, box) {
+      if (box.classList.contains("answered")) return;
+      box.classList.add("answered");
+      const correct = normalize(choice) === normalize(q.answer);
+      box.querySelectorAll(".can-option").forEach((item) => {
+        item.disabled = true;
+        if (normalize(item.textContent) === normalize(q.answer)) item.classList.add("correct");
+      });
+      const feedback = box.querySelector(".can-feedback");
+      if (correct) {
+        const earned = Number(q.points) || 10;
+        streak += 1; score += earned + Math.max(0, streak - 1) * 2;
+        button.classList.add("correct"); feedback.className = "can-feedback correct";
+        feedback.textContent = streak > 1 ? `إجابة صحيحة! +${earned} ونقطتا تتابع لكل سلسلة 🔥` : `إجابة صحيحة! +${earned} نقطة 🎉`;
+        celebrate(box);
+      } else {
+        streak = 0; button.classList.add("wrong"); feedback.className = "can-feedback wrong";
+        feedback.textContent = `الإجابة الصحيحة: ${q.answer}`;
+      }
+      answered += 1;
+      box.querySelector(".can-score").textContent = score;
+      box.querySelector(".can-streak").textContent = streak;
+      box.querySelector(".can-answered").textContent = answered;
+      window.setTimeout(() => finish(!correct), correct ? 1150 : 1900);
     }
 
     function finish(isWrong) {
       const q=questions[index]; if(!q)return;
       if(isWrong)retry.push(q); index+=1;
-      const box=selectedPair.querySelector(".can-question-box"); if(box)box.style.display="none";
+      const box=selectedPair.querySelector(".can-question-box");
+      if(box){box.style.display="none";box.classList.remove("answered");}
       window.setTimeout(()=>nextRound.click(),220);
+    }
+
+    function normalize(value){return String(value||"").trim().replace(/[إأآ]/g,"ا").replace(/ة/g,"ه").replace(/ى/g,"ي").replace(/[ًٌٍَُِّْـ\s.,،؛;:!?؟'"()\[\]-]/g,"").toLowerCase();}
+    function celebrate(host){
+      for(let i=0;i<18;i++){const bit=document.createElement("i");bit.className="can-confetti";bit.style.setProperty("--x",`${Math.random()*220-110}px`);bit.style.setProperty("--r",`${Math.random()*720-360}deg`);bit.style.background=["#f4b942","#13a89e","#ef5b5b","#5d78e8"][i%4];host.appendChild(bit);setTimeout(()=>bit.remove(),1100);}
     }
     function isResultVisible(){return getComputedStyle(result).display!=="none" && result.getClientRects().length>0;}
     function order(list,mode){const copy=list.slice();if(mode==="random")for(let i=copy.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[copy[i],copy[j]]=[copy[j],copy[i]];}return copy;}
@@ -271,9 +324,9 @@
       .names-wheel-redesign .result-container{width:min(760px,100%);max-height:calc(100vh - 28px);overflow-y:auto;background:#fffdf8;border-radius:24px;padding:clamp(18px,4vw,34px);border:0;box-shadow:0 28px 90px rgba(0,0,0,.3);position:relative}.names-wheel-redesign .close-result-btn{position:sticky;top:0;float:left;z-index:4;background:#edf4f2;color:var(--nw-ink)}
       .names-wheel-redesign .selected-pair{gap:15px}.names-wheel-redesign .selected-student,.names-wheel-redesign .selected-task{border:1px solid #e0ebe8;border-radius:17px;background:#fff;padding:18px;box-shadow:none}.names-wheel-redesign .student-name-large{font-size:clamp(1.35rem,4vw,2.4rem);line-height:1.55;color:var(--nw-primary)}
       .names-wheel-redesign .result-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.names-wheel-redesign .result-actions button{min-width:0!important;padding:12px 10px!important;border-radius:11px!important;font-family:Cairo,sans-serif!important;font-size:.8rem!important}.names-wheel-redesign .remove-btn{background:#fff0f0!important;color:#a53232!important;border:1px solid #f0c7c7!important}.names-wheel-redesign .continue-btn{background:#eaf7f4!important;color:#066b63!important;border:1px solid #b9ddd8!important}.names-wheel-redesign .next-round-btn{background:var(--nw-primary)!important;color:#fff!important}
-      .can-native-task{display:none!important}.can-question-box{margin-top:10px}.can-progress{display:inline-block;padding:5px 10px;border-radius:999px;background:#e8f5f2;color:var(--nw-primary);font-size:.72rem;font-weight:800}.can-question{font-size:clamp(1.1rem,3vw,1.55rem);font-weight:900;line-height:1.8;margin:13px 0;color:var(--nw-ink)}.can-hint,.can-answer{display:none;padding:12px;border-radius:10px;margin:9px auto;font-size:.92rem}.can-hint.show{display:block;background:#fff6d8;color:#76550b}.can-answer.show{display:block;background:#dcf7e8;color:#14613a;font-weight:800}.can-actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}.can-actions button{border:0;border-radius:9px;padding:9px 12px;color:#fff;font-family:Cairo,sans-serif;font-weight:800;font-size:.78rem;cursor:pointer}.can-hint-btn{background:#b97a12}.can-answer-btn{background:#5260bb}.can-correct{background:#16834b}.can-wrong{background:#b64a4a}
+      .can-native-task{display:none!important}.can-question-box{margin-top:10px;position:relative}.can-scorebar{display:flex;gap:7px;justify-content:center;flex-wrap:wrap;margin-bottom:9px}.can-scorebar span{background:#f2f7f6;border:1px solid #dbe8e6;border-radius:999px;padding:5px 9px;font-size:.7rem;font-weight:800}.can-scorebar b{color:var(--nw-primary)}.can-progress{display:inline-block;padding:5px 10px;border-radius:999px;background:#e8f5f2;color:var(--nw-primary);font-size:.72rem;font-weight:800}.can-question{font-size:clamp(1.1rem,3vw,1.55rem);font-weight:900;line-height:1.8;margin:13px 0;color:var(--nw-ink)}.can-hint,.can-answer{display:none;padding:12px;border-radius:10px;margin:9px auto;font-size:.92rem}.can-hint.show{display:block;background:#fff6d8;color:#76550b}.can-answer.show{display:block;background:#dcf7e8;color:#14613a;font-weight:800}.can-actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}.can-actions button{border:0;border-radius:9px;padding:9px 12px;color:#fff;font-family:Cairo,sans-serif;font-weight:800;font-size:.78rem;cursor:pointer}.can-hint-btn{background:#b97a12}.can-answer-btn{background:#5260bb}.can-correct{background:#16834b}.can-wrong{background:#b64a4a}
       .names-wheel-redesign .settings-overlay{z-index:11000}.names-wheel-redesign .settings-modal{max-height:90vh;border:1px solid var(--nw-line);box-shadow:0 25px 80px rgba(0,0,0,.28)}.names-wheel-redesign .mode-title{color:var(--nw-ink)}.names-wheel-redesign .mode-desc,.names-wheel-redesign .speed-labels{color:var(--nw-muted)}
-      @media(max-width:700px){.names-wheel-redesign .cosmic-container{padding:10px;border-radius:0}.names-wheel-redesign .header{padding-top:70px}.names-wheel-redesign .control-buttons{top:10px}.names-wheel-redesign .control-buttons.left{left:10px}.names-wheel-redesign .control-buttons.right{right:10px}.names-wheel-redesign .control-btn{width:42px;height:42px}.can-modes{grid-template-columns:1fr}.names-wheel-redesign .class-selector{padding:14px}.names-wheel-redesign .cards-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.names-wheel-redesign .stats-grid{grid-template-columns:repeat(2,1fr)}.names-wheel-redesign .stat-item:last-child{grid-column:1/-1}.names-wheel-redesign .result-actions{grid-template-columns:1fr}.names-wheel-redesign .result-container{max-height:calc(100dvh - 18px);padding:15px}.names-wheel-redesign .action-buttons{display:grid;grid-template-columns:1fr 1fr}.names-wheel-redesign .action-btn{min-width:0}.journey-steps span{font-size:.68rem;padding:6px 9px}.joker-stage{padding:14px;border-radius:19px}.joker-stage-head{display:block;text-align:center}.joker-stage-head>div{justify-content:center}.joker-stage-head p{margin-top:5px}.joker-table{grid-template-columns:1fr 1fr;min-height:270px;gap:9px;padding:6px}.joker-deck{position:absolute;width:86px;height:116px;z-index:7}.joker-deck span{font-size:2.1rem}.joker-deck b{font-size:.68rem}.joker-deck small{display:none}.joker-card{height:245px;width:100%}.joker-back,.joker-front{padding:11px}.joker-back span{font-size:2.8rem}.joker-back b{font-size:.8rem}.joker-student-name,.joker-challenge-text{font-size:.83rem}.joker-stage:not(.dealing):not(.revealed) .joker-card{opacity:.34}.joker-stage.revealed .joker-deck{opacity:0;pointer-events:none}.joker-actions{display:none;grid-template-columns:1fr}.joker-stage.revealed .joker-actions{display:grid}}
+      @media(max-width:700px){.names-wheel-redesign .cosmic-container{padding:10px;border-radius:0}.names-wheel-redesign .header{padding-top:70px}.names-wheel-redesign .control-buttons{top:10px}.names-wheel-redesign .control-buttons.left{left:10px}.names-wheel-redesign .control-buttons.right{right:10px}.names-wheel-redesign .control-btn{width:42px;height:42px}.can-modes{grid-template-columns:1fr}.names-wheel-redesign .class-selector{padding:14px}.names-wheel-redesign .cards-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.names-wheel-redesign .stats-grid{grid-template-columns:repeat(2,1fr)}.names-wheel-redesign .stat-item:last-child{grid-column:1/-1}.names-wheel-redesign .result-actions{grid-template-columns:1fr}.names-wheel-redesign .result-container{max-height:calc(100dvh - 18px);padding:15px}.names-wheel-redesign .action-buttons{display:grid;grid-template-columns:1fr 1fr}.names-wheel-redesign .action-btn{min-width:0}.journey-steps span{font-size:.68rem;padding:6px 9px}.joker-stage{padding:14px;border-radius:19px}.joker-stage-head{display:block;text-align:center}.joker-stage-head>div{justify-content:center}.joker-stage-head p{margin-top:5px}.joker-table{grid-template-columns:1fr 1fr;min-height:270px;gap:9px;padding:6px}.joker-deck{position:absolute;width:86px;height:116px;z-index:7}.joker-deck span{font-size:2.1rem}.joker-deck b{font-size:.68rem}.joker-deck small{display:none}.joker-card{height:245px;width:100%}.joker-back,.joker-front{padding:11px}.joker-back span{font-size:2.8rem}.joker-back b{font-size:.8rem}.joker-student-name,.joker-challenge-text{font-size:.83rem}.joker-stage:not(.dealing):not(.revealed) .joker-card{opacity:.34}.joker-stage.revealed .joker-deck{opacity:0;pointer-events:none}.joker-actions{display:none;grid-template-columns:1fr}.can-options{grid-template-columns:1fr}.joker-stage.revealed .joker-actions{display:grid}}
       @media(prefers-reduced-motion:reduce){.names-wheel-redesign *{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}}
     `;
     document.head.appendChild(style);
