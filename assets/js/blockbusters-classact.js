@@ -67,7 +67,7 @@
   }
 
   function valid(pack) {
-    return Boolean(pack && pack.format === "classact" && pack.activityType === "blockbusters" && Array.isArray(pack.questions) && pack.questions.length && pack.questions.every(q => q && typeof q.question === "string" && q.question.trim() && typeof q.answer === "string" && q.answer.trim()));
+    return Boolean(pack && pack.format === "classact" && String(pack.version) === "1.0" && pack.activityType === "blockbusters" && Array.isArray(pack.questions) && pack.questions.length && pack.questions.every(q => q && typeof q.question === "string" && q.question.trim() && typeof q.answer === "string" && q.answer.trim()));
   }
 
   function addCss() {
