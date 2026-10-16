@@ -50,6 +50,8 @@
   let wrongCount = 0;
   let rollInProgress = false;
   let confirmedPlayerNames = [];
+  let activeQuestion = null;
+  const knowledgeScores = new Map();
 
   const ready = (fn) => document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", fn) : fn();
   ready(init);
@@ -73,10 +75,10 @@
         #classactMonopolyLoader{background:rgba(255,255,255,.98);color:#172033;border:3px solid #d4af37;border-radius:22px;padding:16px;margin:14px auto;max-width:760px;text-align:center;box-shadow:0 14px 38px rgba(0,0,0,.22);font-family:Cairo,sans-serif}.cam-game-live #classactMonopolyLoader{display:none!important}
         .cam-title{display:flex;align-items:center;justify-content:space-between;gap:10px}.cam-title h3{margin:0;font-size:1.35rem}.cam-guide-btn{border:0;border-radius:12px;padding:9px 13px;background:#475569;color:#fff;font-weight:800;cursor:pointer}.cam-intro{margin:8px 0 12px}.cam-mode-row,.cam-actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}.cam-mode{flex:1;min-width:230px;border:3px solid #0f766e;background:#fff;color:#0f766e;border-radius:15px;padding:14px 18px;font-size:1rem;font-weight:900;cursor:pointer}.cam-mode.active{background:#0f766e;color:#fff;box-shadow:0 0 0 4px rgba(15,118,110,.16)}.cam-import{display:none;margin-top:12px}.cam-import.active{display:block}.cam-file{display:block;margin:10px auto;max-width:460px;width:100%}.cam-status{min-height:28px;margin-top:10px;padding:8px;border-radius:10px;background:#f1f5f9;color:#0f766e;font-weight:800}.cam-details{margin-top:10px}.cam-details summary{cursor:pointer;color:#475569;font-weight:800}.cam-count-guide{margin:9px auto 0;max-width:680px;background:#fff7d6;border:1px solid #f2c94c;border-radius:12px;padding:9px;font-weight:700}.cam-progress{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:10px}.cam-step{padding:7px 4px;border-radius:10px;background:#e2e8f0;font-size:.8rem;font-weight:800}.cam-step.done{background:#dcfce7;color:#166534}.cam-step.current{outline:3px solid #f59e0b;background:#fff7d6}
         .cam-overlay,.cam-guide-overlay{position:fixed;inset:0;z-index:100000;background:rgba(4,20,26,.86);display:none;align-items:center;justify-content:center;padding:18px}.cam-overlay.active,.cam-guide-overlay.active{display:flex}.cam-card,.cam-guide-card{background:#fff;color:#172033;border:4px solid #d4af37;border-radius:24px;max-width:850px;width:100%;padding:28px;text-align:center;box-shadow:0 22px 70px rgba(0,0,0,.45);font-family:Cairo,sans-serif;max-height:92vh;overflow:auto}.cam-guide-card{text-align:right}.cam-guide-card h2{text-align:center}.cam-guide-list{display:grid;gap:12px}.cam-guide-item{border:2px solid #e2e8f0;border-radius:15px;padding:14px}.cam-guide-item strong{color:#0f766e;font-size:1.08rem}.cam-guide-footer{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:18px}.cam-guide-footer button{border:0;border-radius:12px;padding:12px 20px;font-weight:800;cursor:pointer;color:#fff;background:#0f766e}.cam-guide-footer .secondary{background:#475569}
-        .cam-counter{color:#0f766e;font-weight:800}.cam-player{color:#7c3aed;font-weight:900;margin-top:6px}.cam-question{font-size:clamp(1.35rem,3vw,2.15rem);line-height:1.7;font-weight:800;margin:20px 0}.cam-meta{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}.cam-badge{background:#eef2ff;border-radius:999px;padding:6px 12px;font-weight:800}.cam-hint,.cam-answer{display:none;padding:14px;border-radius:12px;margin:12px auto}.cam-hint.show{display:block;background:#fff7d6}.cam-answer.show{display:block;background:#dcfce7;font-size:1.35rem;font-weight:800}.cam-actions button{border:0;border-radius:12px;padding:11px 17px;color:#fff;font-family:Cairo,sans-serif;font-weight:800;cursor:pointer}.cam-hint-btn{background:#d97706}.cam-answer-btn{background:#4f46e5}.cam-correct{background:#15803d}.cam-wrong{background:#b91c1c}.cam-score{margin-top:12px;font-weight:800;color:#334155}
+        .cam-counter{color:#0f766e;font-weight:800}.cam-player{color:#7c3aed;font-weight:900;margin-top:6px}.cam-question{font-size:clamp(1.35rem,3vw,2.15rem);line-height:1.7;font-weight:800;margin:20px 0}.cam-meta{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}.cam-badge{background:#eef2ff;border-radius:999px;padding:6px 12px;font-weight:800}.cam-hint,.cam-answer{display:none;padding:14px;border-radius:12px;margin:12px auto}.cam-hint.show{display:block;background:#fff7d6}.cam-answer.show{display:block;background:#dcfce7;font-size:1.35rem;font-weight:800}.cam-options{display:none;grid-template-columns:1fr 1fr;gap:10px;margin:14px auto;max-width:760px}.cam-options.show{display:grid}.cam-option{border:3px solid transparent;border-radius:15px;padding:14px;font-family:Cairo,sans-serif;font-size:1rem;font-weight:900;cursor:pointer;color:#172033;transition:.2s}.cam-option:nth-child(4n+1){background:#dbeafe;border-color:#60a5fa}.cam-option:nth-child(4n+2){background:#dcfce7;border-color:#4ade80}.cam-option:nth-child(4n+3){background:#fef3c7;border-color:#fbbf24}.cam-option:nth-child(4n){background:#fce7f3;border-color:#f472b6}.cam-option:hover{transform:translateY(-3px)}.cam-option.correct{background:#16a34a;color:#fff;border-color:#14532d}.cam-option.wrong{background:#dc2626;color:#fff;border-color:#7f1d1d}.cam-option:disabled{cursor:not-allowed;opacity:.8}.cam-leaderboard{margin:10px auto 0;display:flex;gap:7px;justify-content:center;flex-wrap:wrap}.cam-leader{background:#f1f5f9;border-radius:999px;padding:5px 10px;font-weight:800;color:#334155}.cam-actions button{border:0;border-radius:12px;padding:11px 17px;color:#fff;font-family:Cairo,sans-serif;font-weight:800;cursor:pointer}.cam-hint-btn{background:#d97706}.cam-answer-btn{background:#4f46e5}.cam-correct{background:#15803d}.cam-wrong{background:#b91c1c}.cam-score{margin-top:12px;font-weight:800;color:#334155}
         .cam-turn-hud{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:99990;width:min(94vw,760px);display:none;grid-template-columns:minmax(180px,1fr) auto;align-items:center;gap:12px;background:rgba(15,23,42,.97);color:#fff;border:4px solid var(--cam-player-color,#d4af37);border-radius:22px;padding:12px 16px;box-shadow:0 16px 45px rgba(0,0,0,.42);font-family:Cairo,sans-serif}.cam-game-live .cam-turn-hud{display:grid}.cam-turn-info{text-align:right}.cam-turn-label{font-size:.82rem;color:#fde68a;font-weight:800}.cam-turn-player{font-size:clamp(1.15rem,2.8vw,1.65rem);font-weight:900;line-height:1.35;color:var(--cam-player-color,#fff)}.cam-turn-instruction{font-size:.87rem;color:#cbd5e1;font-weight:700}.cam-turn-actions{display:flex;gap:9px;align-items:center}.cam-primary-action{min-width:210px;min-height:62px;padding:10px 20px;border:0;border-radius:16px;background:#f59e0b;color:#172033;font-family:Cairo,sans-serif;font-size:1.18rem;font-weight:900;cursor:pointer;box-shadow:0 6px 0 #b45309}.cam-primary-action.ready{animation:camPulse 1.6s infinite}.cam-primary-action.end{background:#22c55e;color:#052e16;box-shadow:0 6px 0 #15803d}.cam-primary-action:disabled{opacity:.55;cursor:not-allowed;box-shadow:none}.cam-native-action{display:none!important}.cam-mini-settings{width:44px;height:44px;border:0;border-radius:50%;background:#334155;color:#fff;font-size:1.15rem;cursor:pointer}.cam-dice-help{display:none!important}@keyframes camPulse{50%{transform:scale(1.045);box-shadow:0 8px 0 #b45309,0 0 0 9px rgba(245,158,11,.18)}}
         body.cam-game-live{padding-bottom:108px}.cam-game-live #startGameBtn,.cam-game-live #setupPlayersBtn,.cam-game-live #classSelect,.cam-game-live #playersCount,.cam-game-live label[for="classSelect"],.cam-game-live label[for="playersCount"]{display:none!important}.cam-original-placeholder{display:none}
-        @media(max-width:650px){.cam-title{align-items:flex-start}.cam-progress{grid-template-columns:1fr 1fr}.cam-card,.cam-guide-card{padding:18px}.cam-actions button{width:100%}.cam-turn-hud{bottom:7px;padding:9px;grid-template-columns:1fr}.cam-turn-info{text-align:center}.cam-turn-actions{justify-content:center}.cam-primary-action{min-width:210px;min-height:56px}body.cam-game-live{padding-bottom:165px}}
+        @media(max-width:650px){.cam-options{grid-template-columns:1fr}.cam-title{align-items:flex-start}.cam-progress{grid-template-columns:1fr 1fr}.cam-card,.cam-guide-card{padding:18px}.cam-actions button{width:100%}.cam-turn-hud{bottom:7px;padding:9px;grid-template-columns:1fr}.cam-turn-info{text-align:center}.cam-turn-actions{justify-content:center}.cam-primary-action{min-width:210px;min-height:56px}body.cam-game-live{padding-bottom:165px}}
       </style>
       <div class="cam-title"><h3>🎓 تجهيز مونوبولي التعليمي</h3><button type="button" class="cam-guide-btn">❔ طريقة اللعب</button></div>
       <p class="cam-intro">اختر نوع اللعبة فقط، ثم استخدم إعدادات الصف واللاعبين الموجودة أسفل هذه البطاقة.</p>
@@ -88,7 +90,7 @@
 
     const overlay = document.createElement("div");
     overlay.className = "cam-overlay";
-    overlay.innerHTML = `<article class="cam-card"><div class="cam-counter"></div><div class="cam-player"></div><div class="cam-question"></div><div class="cam-meta"><span class="cam-badge cam-difficulty"></span><span class="cam-badge cam-points"></span><span class="cam-badge cam-timer"></span></div><div class="cam-hint"></div><div class="cam-answer"></div><div class="cam-actions"><button type="button" class="cam-hint-btn">💡 عرض التلميح</button><button type="button" class="cam-answer-btn">👁️ كشف الإجابة</button><button type="button" class="cam-correct">✅ إجابة صحيحة — متابعة الدور</button><button type="button" class="cam-wrong">❌ إجابة خاطئة — إنهاء الدور</button></div><div class="cam-score"></div></article>`;
+    overlay.innerHTML = `<article class="cam-card"><div class="cam-counter"></div><div class="cam-player"></div><div class="cam-question"></div><div class="cam-meta"><span class="cam-badge cam-difficulty"></span><span class="cam-badge cam-points"></span><span class="cam-badge cam-timer"></span></div><div class="cam-hint"></div><div class="cam-answer"></div><div class="cam-options"></div><div class="cam-actions"><button type="button" class="cam-hint-btn">💡 عرض التلميح</button><button type="button" class="cam-answer-btn">👁️ كشف الإجابة</button><button type="button" class="cam-correct">✅ إجابة صحيحة — متابعة الدور</button><button type="button" class="cam-wrong">❌ إجابة خاطئة — إنهاء الدور</button></div><div class="cam-score"></div><div class="cam-leaderboard"></div></article>`;
     document.body.appendChild(overlay);
 
     const guide = document.createElement("div");
@@ -271,6 +273,7 @@
       }
       const q = queue[index];
       if (!q) return;
+      activeQuestion = q;
       const player = currentPlayerName();
       overlay.querySelector(".cam-counter").textContent = `${mode === "builtin" ? "سؤال مونوبولي الجاهز" : "سؤال الدرس"} • ${index + 1} من ${queue.length}`;
       overlay.querySelector(".cam-player").textContent = player ? `🎯 دور: ${player}` : "🎯 تحدي هذا الدور";
@@ -280,6 +283,7 @@
       overlay.querySelector(".cam-timer").textContent = `${Number(q.time)||30} ثانية مقترحة`;
       const hint=overlay.querySelector(".cam-hint"); hint.textContent=q.hint?`تلميح: ${q.hint}`:"فكر جيدًا واستعن بفريقك"; hint.className="cam-hint";
       const answer=overlay.querySelector(".cam-answer"); answer.textContent=`الإجابة: ${q.answer}`; answer.className="cam-answer";
+      renderChoices(q);
       updateScore();
       challengeOpen=true; overlay.classList.add("active"); rollButton.disabled=true;
       refreshTurnHud();
@@ -287,14 +291,22 @@
 
     function resolve(wrong){
       if(!challengeOpen)return;
-      if(wrong){ retry.push(queue[index]); wrongCount+=1; } else correctCount+=1;
+      if(wrong){ retry.push(queue[index]); wrongCount+=1; } else { correctCount+=1; const name=currentPlayerName()||"اللاعب"; knowledgeScores.set(name,(knowledgeScores.get(name)||0)+(Number(activeQuestion?.points)||10)); if(typeof window.confetti==="function")window.confetti({particleCount:70,spread:65,origin:{y:.7}}); }
       index+=1; challengeOpen=false; overlay.classList.remove("active");
       updateScore();
       if(wrong && !endTurnButton.disabled) endTurnButton.click();
       setHudInstruction(wrong ? "❌ انتهى الدور، وسيعود السؤال لاحقًا." : "✅ إجابة صحيحة؛ أكمل إجراءات المربع ثم اضغط إنهاء الدور.");
       refreshGuide();
     }
-    function updateScore(){ overlay.querySelector(".cam-score").textContent=`النتيجة المعرفية: ${correctCount} صحيحة • ${wrongCount} تحتاج مراجعة`; }
+    function renderChoices(q){
+      const box=overlay.querySelector(".cam-options"),actions=overlay.querySelector(".cam-actions");
+      const wrong=Array.isArray(q.alternativeAnswers)?q.alternativeAnswers.map(v=>String(v).trim()).filter(Boolean):[];
+      box.innerHTML=""; box.classList.toggle("show",wrong.length>=2); actions.style.display=wrong.length>=2?"none":"";
+      if(wrong.length<2)return;
+      const choices=orderQuestions([...wrong.slice(0,3).map(answer=>({question:answer,answer:"wrong"})),{question:String(q.answer),answer:"correct"}],"random");
+      choices.forEach(item=>{const b=document.createElement("button");b.type="button";b.className="cam-option";b.textContent=item.question;b.onclick=()=>{box.querySelectorAll("button").forEach(v=>v.disabled=true);const ok=item.answer==="correct";b.classList.add(ok?"correct":"wrong");if(!ok){[...box.children].find(v=>v.textContent===String(q.answer))?.classList.add("correct")}answer.classList.add("show");window.setTimeout(()=>resolve(!ok),900)};box.appendChild(b)});
+    }
+    function updateScore(){ overlay.querySelector(".cam-score").textContent=`النتيجة المعرفية: ${correctCount} صحيحة • ${wrongCount} تحتاج مراجعة`; const leaders=[...knowledgeScores.entries()].sort((a,b)=>b[1]-a[1]); overlay.querySelector(".cam-leaderboard").innerHTML=leaders.map(([name,score],i)=>`<span class="cam-leader">${i===0?"👑":"⭐"} ${name}: ${score}</span>`).join(""); }
     function currentPlayerName(){
       const headings=[...document.querySelectorAll("h2,h3,h4,.player-name")];
       const explicit=document.querySelector('[data-current-player],.current-player,.active-player,[aria-current="true"]');
