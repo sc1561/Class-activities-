@@ -1,7 +1,7 @@
 (function () {
   "use strict";
   const TYPE = "timer";
-  let pack = null, questions = [], retry = [], index = 0, importedMode = false;
+  let pack = null, questions = [], retry = [], index = 0, importedMode = false, loadVersion = 0;
   const ready = (fn) => document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", fn) : fn();
 
   ready(() => {
@@ -29,19 +29,26 @@
     const importBox = loader.querySelector(".cati-import"), status = loader.querySelector(".cati-status");
 
     loader.querySelectorAll(".cati-mode").forEach((button) => button.addEventListener("click", () => {
+      reset.click();
       importedMode = button.dataset.mode === "imported";
       loader.querySelectorAll(".cati-mode").forEach((item) => item.classList.toggle("active", item === button));
       importBox.classList.toggle("active", importedMode); card.classList.toggle("active", importedMode && !!pack);
+      if (importedMode && pack) render();
     }));
     loader.querySelector(".cati-file").addEventListener("change", async (event) => {
+      const request = ++loadVersion;
       try {
         const file = event.target.files[0]; if (!file) return;
         const data = JSON.parse(await file.text());
+        if (request !== loadVersion) return;
         if (data.format !== "classact" || data.version !== "1.0" || data.activityType !== TYPE) throw new Error("هذا الملف ليس مخصصًا للمؤقت التفاعلي");
-        const valid = Array.isArray(data.questions) ? data.questions.filter((q) => q && String(q.question || "").trim() && String(q.answer || "").trim()) : [];
-        if (!valid.length) throw new Error("لا توجد أسئلة صالحة في الملف");
-        pack = data; questions = order(valid, data.settings?.questionOrder); retry = []; index = 0; status.textContent = `تم استيراد ${valid.length} سؤالًا بنجاح`; card.classList.add("active"); render();
-      } catch (error) { pack = null; questions = []; card.classList.remove("active"); status.textContent = error.message || "تعذر قراءة الملف"; }
+        const valid = data.questions;
+        if (!Array.isArray(valid) || !valid.length) throw new Error("لا توجد أسئلة في الملف");
+        const invalid = valid.findIndex(q => !q || typeof q.question !== "string" || !q.question.trim() || typeof q.answer !== "string" || !q.answer.trim() || (q.time !== undefined && (!Number.isFinite(q.time) || q.time < 5)));
+        if (invalid >= 0) throw new Error(`السؤال ${invalid + 1}: أكمل السؤال والإجابة واجعل الزمن عددًا لا يقل عن 5 ثوانٍ`);
+        pack = data; questions = order(valid, data.settings?.questionOrder); retry = []; index = 0; status.textContent = `تم استيراد ${valid.length} سؤالًا بنجاح`; render();
+      } catch (error) { if (request === loadVersion) status.textContent = error.message || "تعذر قراءة الملف"; }
+      finally { if (request === loadVersion) event.target.value = ""; }
     });
     start.addEventListener("click", (event) => {
       if (!importedMode) return;
@@ -63,9 +70,10 @@
       card.querySelector(".cati-question").textContent=q.question;
       const hint=card.querySelector(".cati-hint");hint.textContent=q.hint?`تلميح: ${q.hint}`:"لا يوجد تلميح إضافي";hint.className="cati-hint";
       const answer=card.querySelector(".cati-answer");answer.textContent=`الإجابة: ${q.answer}`;answer.className="cati-answer";
-      setDuration(seconds); card.classList.add("active");
+      card.querySelector(".cati-hint-btn").hidden=pack.settings?.allowHints===false;
+      if (importedMode) setDuration(seconds); card.classList.toggle("active", importedMode);
     }
-    function advance(isWrong){const q=questions[index];if(!q)return;if(isWrong)retry.push(q);index+=1;reset.click();window.setTimeout(render,120);}
+    function advance(isWrong){const q=questions[index];if(!q)return;if(isWrong)retry.push(q);index+=1;render();}
     function setDuration(seconds){duration.querySelectorAll("option[data-classact]").forEach(o=>o.remove());let option=[...duration.options].find(o=>Number(o.value)===seconds);if(!option){option=document.createElement("option");option.value=String(seconds);option.textContent=`${seconds} ثانية`;option.dataset.classact="true";duration.appendChild(option);}duration.value=String(seconds);duration.dispatchEvent(new Event("change",{bubbles:true}));reset.click();}
     function order(list,mode){const copy=list.slice();if(mode==="random")for(let i=copy.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[copy[i],copy[j]]=[copy[j],copy[i]];}return copy;}
   });
