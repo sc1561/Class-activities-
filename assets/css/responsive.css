@@ -1,0 +1,29 @@
+/* Shared touch and narrow-screen layout support. */
+.table-responsive-wrapper { max-width: 100%; overflow-x: auto; }
+@media (pointer: coarse) {
+  button, .toolbar-icon, [role="button"] { touch-action: manipulation; }
+}
+@media (max-width: 768px) {
+  .responsive-container, .container-responsive { box-sizing: border-box; max-width: 100%; }
+  .top-toolbar {
+    box-sizing: border-box; position: relative !important; inset: auto !important;
+    width: 100%; height: auto !important; min-height: 70px;
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 12px;
+    padding: 12px !important; transform: none !important;
+  }
+  .top-toolbar .game-logo { min-width: 0; text-align: center; }
+  .toolbar-icons { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px !important; max-width: 100%; }
+  .toolbar-icons .toolbar-icon { box-sizing: border-box; width: 44px !important; height: 44px !important; flex: 0 0 44px; }
+  .preset-times { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 10px !important; }
+  .preset-times .preset-btn { min-width: 0; white-space: normal; min-height: 44px; }
+  .competitive-progress-bar {
+    box-sizing: border-box; position: relative !important; inset: auto !important;
+    height: auto !important; padding: 12px !important;
+    flex-direction: column; align-items: stretch; gap: 12px;
+  }
+  .competitive-progress-bar .progress-section { width: 100%; min-width: 0; gap: 8px; }
+  .competitive-progress-bar .progress-label { min-width: 65px; }
+  .competitive-progress-bar .progress-track { flex: 1; width: auto; min-width: 24px; }
+  .competitive-progress-bar .progress-text { white-space: nowrap; }
+  .modal-content, .welcome-modal-content { box-sizing: border-box; max-width: calc(100vw - 24px); max-height: 90dvh; overflow-y: auto; }
+}
