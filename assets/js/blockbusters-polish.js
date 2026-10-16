@@ -1,6 +1,19 @@
 (function () {
   'use strict';
 
+  // The original mobile setup calls this after rebuilding the player fields.
+  window.ensurePlayersContainerVisibility = window.ensurePlayersContainerVisibility || function () {
+    const container = document.getElementById('playersContainer');
+    if (!container || !container.childElementCount) return;
+    container.classList.remove('hidden');
+    container.style.display = 'grid';
+    container.style.maxWidth = '100%';
+    container.querySelectorAll('input,select').forEach(function (control) {
+      control.style.minWidth = '0';
+      control.style.maxWidth = '100%';
+    });
+  };
+
   // لا يسمح لأي صوت أن يبدأ قبل أول تفاعل صريح من المستخدم.
   let audioUnlocked = false;
   const nativePlay = HTMLMediaElement.prototype.play;
